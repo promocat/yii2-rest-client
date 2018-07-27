@@ -1,12 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: simialbi
- * Date: 12.10.2017
- * Time: 10:34
- */
 
-namespace simialbi\yii2\rest;
+namespace promocat\yii2\rest;
 
 use Closure;
 
@@ -25,7 +19,7 @@ use Yii;
  * ```php
  * 'components' => [
  *     'restclient' => [
- *         'class' => 'simialbi\yii2\rest\Connection',
+ *         'class' => 'promocat\yii2\rest\Connection',
  *         'config' => [
  *             'base_uri' => 'https://api.site.com/',
  *         ],
