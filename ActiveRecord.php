@@ -95,7 +95,7 @@ class ActiveRecord extends BaseActiveRecord {
 	 */
 	public static function find($options = []) {
 		$config = [
-			'class'   => 'simialbi\yii2\rest\ActiveQuery',
+			'class'   => 'promocat\rest\ActiveQuery',
 			'options' => $options
 		];
 
