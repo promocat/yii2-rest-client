@@ -10,6 +10,9 @@ use yii\helpers\ArrayHelper;
  * Class QueryBuilder builds an HiActiveResource query based on the specification given as a [[Query]] object.
  */
 class QueryBuilder extends \yii\db\QueryBuilder {
+
+    protected $authHeaders = [];
+
     /**
      * @var Connection the database connection.
      */
@@ -81,6 +84,60 @@ class QueryBuilder extends \yii\db\QueryBuilder {
             'pathInfo' => ArrayHelper::remove($clauses, 'pathInfo'),
             'queryParams' => $clauses
         ];
+    }
+
+    /**
+     * This function is for you to provide your authentication.
+     *
+     * @param Query $query
+     */
+    public function buildAuth(Query $query) {
+        $auth = $this->db->getAuth();
+        if (isset($auth['headerToken'])) {
+            $this->authHeaders['Authorization'] = 'token ' . $auth['headerToken'];
+        }
+        if (isset($auth['headerBearer'])) {
+            $this->authHeaders['Authorization'] = 'Bearer ' . $auth['headerBearer'];
+        }
+    }
+
+    public function buildMethod(Query $query) {
+        static $defaultMethods = [
+            'get' => 'GET',
+            'put' => 'PUT',
+            'head' => 'HEAD',
+            'post' => 'GET',
+            'search' => 'GET',
+            'insert' => 'POST',
+            'update' => 'PUT',
+            'delete' => 'DELETE',
+        ];
+
+        return isset($defaultMethods[$query->action]) ? $defaultMethods[$query->action] : 'POST';
+    }
+
+    public function buildUri(Query $query) {
+        return $query->from;
+    }
+
+    public function buildHeaders(Query $query) {
+        return $this->authHeaders;
+    }
+
+    public function buildProtocolVersion(Query $query) {
+        return null;
+    }
+
+    public function buildQueryParams(Query $query) {
+        return $query->where;
+    }
+
+    public function buildFormParams(Query $query) {
+        return [];
+    }
+
+    public function buildBody(Query $query) {
+        return null;
     }
 
     /**

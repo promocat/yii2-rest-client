@@ -15,6 +15,11 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
     use ActiveRelationTrait;
 
     /**
+     * @var array|null a list of relations that this query should be joined with
+     */
+    public $joinWith = [];
+
+    /**
      * @var array options for search
      */
     public $options = [];
@@ -158,5 +163,101 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
         }
 
         return null;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function prepare($builder = null) {
+        if (!empty($this->joinWith)) {
+            $this->buildJoinWith();
+            $this->joinWith = null;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param $with
+     *
+     * @return static
+     */
+    public function joinWith($with) {
+        $this->joinWith[] = (array)$with;
+
+        return $this;
+    }
+
+    private function buildJoinWith() {
+        $join = $this->join;
+        $this->join = [];
+
+        $model = new $this->modelClass();
+
+        foreach ($this->joinWith as $with) {
+            $this->joinWithRelations($model, $with);
+            foreach ($with as $name => $callback) {
+                $this->innerJoin(is_int($name) ? [$callback] : [$name => $callback]);
+                unset($with[$name]);
+            }
+        }
+
+        if (!empty($join)) {
+            // append explicit join to joinWith()
+            // https://github.com/yiisoft/yii2/issues/2880
+            $this->join = empty($this->join) ? $join : array_merge($this->join, $join);
+        }
+
+        if (empty($this->select) || true) {
+            $this->addSelect(['*' => '*']);
+            foreach ($this->joinWith as $join) {
+                $key = array_shift(array_keys($join));
+                $closure = array_shift($join);
+
+                $this->addSelect(is_int($key) ? $closure : $key);
+            }
+        }
+    }
+
+    /**
+     * @param ActiveRecord $model
+     * @param $with
+     */
+    protected function joinWithRelations($model, $with) {
+        foreach ($with as $name => $callback) {
+            if (is_int($name)) {
+                $name = $callback;
+                $callback = null;
+            }
+
+            $primaryModel = $model;
+            $parent = $this;
+
+            if (!isset($relations[$name])) {
+                $relations[$name] = $relation = $primaryModel->getRelation($name);
+                if ($callback !== null) {
+                    call_user_func($callback, $relation);
+                }
+                if (!empty($relation->joinWith)) {
+                    $relation->buildJoinWith();
+                }
+                $this->joinWithRelation($parent, $relation);
+            }
+        }
+    }
+
+    /**
+     * Joins a parent query with a child query.
+     * The current query object will be modified accordingly.
+     *
+     * @param ActiveQuery $parent
+     * @param ActiveQuery $child
+     */
+    private function joinWithRelation($parent, $child) {
+        if (!empty($child->join)) {
+            foreach ($child->join as $join) {
+                $this->join[] = $join;
+            }
+        }
     }
 }
