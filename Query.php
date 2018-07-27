@@ -1,6 +1,6 @@
 <?php
 
-namespace promocat\yii2\rest;
+namespace promocat\rest;
 
 use yii\db\QueryInterface;
 use Yii;
