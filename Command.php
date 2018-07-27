@@ -1,4 +1,5 @@
 <?php
+
 namespace promocat\yii2\rest;
 
 use yii\base\Component;
