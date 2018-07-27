@@ -32,7 +32,7 @@ class ActiveRecord extends BaseActiveRecord {
 	public function __construct(array $attributes = [], $config = []) {
 		$this->_isConstructing = true;
 		$setOld                = true;
-		$keys                  = $this->primaryKey();
+		$keys                  = $this->\();
 		foreach ($keys as $key) {
 			if (!isset($attributes[$key])) {
 				$setOld = false;
@@ -114,14 +114,20 @@ class ActiveRecord extends BaseActiveRecord {
 	 * @return string the url path
 	 */
 	public static function modelName() {
-		return Inflector::pluralize(Inflector::camel2id(StringHelper::basename(get_called_class()), '-'));
+	    return Inflector::pluralize(Inflector::camel2id(StringHelper::basename(get_called_class()), '-'));
 	}
 
 	/**
-	 * @inheritdoc
-	 */
+     * Returns the primary key **name(s)** for this AR class. Defaults to ['id'].
+     *
+     * Note that an array should be returned even when the record only has a single primary key.
+     *
+     * For the primary key **value** see [[getPrimaryKey()]] instead.
+     *
+     * @return string[] the primary key name(s) for this AR class.
+     */
 	public static function primaryKey() {
-		new InvalidConfigException('The primaryKey() method of RestClient ActiveRecord has to be implemented by child classes.');
+        return ['id']
 	}
 
 	/**
