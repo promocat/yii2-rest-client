@@ -127,7 +127,7 @@ class ActiveRecord extends BaseActiveRecord {
      * @return string[] the primary key name(s) for this AR class.
      */
 	public static function primaryKey() {
-        return ['id']
+        return ['id'];
 	}
 
 	/**
