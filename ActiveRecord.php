@@ -32,7 +32,7 @@ class ActiveRecord extends BaseActiveRecord {
 	public function __construct(array $attributes = [], $config = []) {
 		$this->_isConstructing = true;
 		$setOld                = true;
-		$keys                  = $this->\();
+		$keys                  = $this->primaryKey();
 		foreach ($keys as $key) {
 			if (!isset($attributes[$key])) {
 				$setOld = false;
