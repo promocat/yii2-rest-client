@@ -1,5 +1,5 @@
 {
-	"name": "simialbi/yii2-rest-client",
+	"name": "promocat/yii2-rest-client",
 	"type": "yii2-extension",
 	"description": "REST client (AR-like model) for Yii Framework 2.0 (via yii2-http-client, extends ApexWire/yii2-restclient)",
 	"keywords": [
@@ -18,21 +18,26 @@
 		{
 			"name": "simialbi",
 			"email": "simi.albi@gmail.com"
-		}
+		},
+		{
+			"name": "PromoCat",
+			"email": "development@promocat.nl"
+		},
+		
 	],
 	"support": {
-		"source": "https://github.com/simialbi/yii2-rest-client",
-		"issues": "https://github.com/simialbi/yii2-rest-client/issues"
+		"source": "https://github.com/promocat/yii2-rest-client",
+		"issues": "https://github.com/promocat/yii2-rest-client/issues"
 	},
 	"minimum-stability": "beta",
 	"require": {
-		"php": ">=5.5.0",
+		"php": ">=7.1.0",
 		"yiisoft/yii2": ">=2.0.5",
 		"yiisoft/yii2-httpclient": ">=2.0.0"
 	},
 	"autoload": {
 		"psr-4": {
-			"simialbi\\yii2\\rest\\": ""
+			"promocat\\yii2\\rest\\": ""
 		}
 	}
 }
