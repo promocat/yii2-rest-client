@@ -22,8 +22,7 @@
 		{
 			"name": "PromoCat",
 			"email": "development@promocat.nl"
-		},
-		
+		}
 	],
 	"support": {
 		"source": "https://github.com/promocat/yii2-rest-client",
