@@ -202,22 +202,20 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
             }
         }
 
-        if (!empty($join)) {
-            // append explicit join to joinWith()
-            // https://github.com/yiisoft/yii2/issues/2880
-            $this->join = empty($this->join) ? $join : array_merge($this->join, $join);
+//        if (!empty($join)) {
+//            // append explicit join to joinWith()
+//            // https://github.com/yiisoft/yii2/issues/2880
+//            $this->join = empty($this->join) ? $join : array_merge($this->join, $join);
+//        }
+
+        $this->addSelect(['*' => '*']);
+        foreach ($this->joinWith as $join) {
+            $keys = array_keys($join);
+            $key = array_shift($keys);
+            $closure = array_shift($join);
+            $this->addSelect(is_int($key) ? $closure : $key);
         }
 
-        if (empty($this->select) || true) {
-            $this->addSelect(['*' => '*']);
-            foreach ($this->joinWith as $join) {
-                $keys = array_keys($join);
-                $key = array_shift($keys);
-                $closure = array_shift($join);
-
-                $this->addSelect(is_int($key) ? $closure : $key);
-            }
-        }
     }
 
     /**
