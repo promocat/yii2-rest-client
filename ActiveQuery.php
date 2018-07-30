@@ -211,7 +211,8 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
         if (empty($this->select) || true) {
             $this->addSelect(['*' => '*']);
             foreach ($this->joinWith as $join) {
-                $key = array_shift(array_keys($join));
+                $keys = array_keys($join);
+                $key = array_shift($keys);
                 $closure = array_shift($join);
 
                 $this->addSelect(is_int($key) ? $closure : $key);
