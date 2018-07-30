@@ -200,6 +200,20 @@ class QueryBuilder extends \yii\db\QueryBuilder {
         return $where;
     }
 
+    public function prepareBuild(&$query) {
+        if (empty($query->where)) {
+            $query->where = [];
+        }
+        if (isset($query->primaryModel)) {
+            foreach ($query->link as $filterAttribute => $valueAttribute) {
+                if (isset($query->primaryModel->{$valueAttribute})) {
+                    $query->where([$filterAttribute => $query->primaryModel->{$valueAttribute}]);
+                }
+            }
+        }
+        return $query;
+    }
+
     /**
      * @inheritdoc
      */
@@ -252,6 +266,7 @@ class QueryBuilder extends \yii\db\QueryBuilder {
         }
 
         if (isset($condition[0])) { // operator format: operator, operand 1, operand 2, ...
+            var_dump($condition);
             /*
             $operator = strtoupper($condition[0]);
             if (!isset($this->conditionBuilders[$operator])) {
