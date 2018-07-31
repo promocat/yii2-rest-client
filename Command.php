@@ -12,138 +12,141 @@ use yii\helpers\Inflector;
  * This property is read-only.
  */
 class Command extends Component {
-	/**
-	 * @var Connection
-	 */
-	public $db;
+    /**
+     * @var Connection
+     */
+    public $db;
 
-	/**
-	 * @var string the name of the ActiveRecord class.
-	 */
-	public $modelClass;
+    /**
+     * @var string the name of the ActiveRecord class.
+     */
+    public $modelClass;
 
-	/**
-	 * @var string
-	 */
-	public $pathInfo;
+    /**
+     * @var string
+     */
+    public $action;
 
-	/**
-	 * @var array
-	 */
-	public $queryParams;
+    /**
+     * @var string
+     */
+    public $uri;
 
-	/**
-	 * Returns the raw url by inserting parameter values into the corresponding placeholders.
-	 * Note that the return value of this method should mainly be used for logging purpose.
-	 * It is likely that this method returns an invalid URL due to improper replacement of parameter placeholders.
-	 * @return string the raw URL with parameter values inserted into the corresponding placeholders.
-	 */
-	public function getRawUrl() {
-		$rawUrl = $this->db->handler->get($this->pathInfo, $this->queryParams)->fullUrl;
+    /**
+     * @var array
+     */
+    public $queryParams;
 
-		return $rawUrl;
-	}
+    /**
+     * @var array
+     */
+    public $headers;
 
-	/**
-	 * @return mixed
-	 */
-	public function queryAll() {
-		return $this->queryInternal();
-	}
+    /**
+     * @return mixed
+     */
+    public function queryAll() {
+        return $this->queryInternal();
+    }
 
-	/**
-	 * @return mixed
-	 */
-	public function queryOne() {
-		/* @var $class ActiveRecord */
-		$class = $this->modelClass;
+    /**
+     * @return mixed
+     */
+    public function queryOne() {
+        /* @var $class ActiveRecord */
+        $class = $this->modelClass;
 
-		if (!empty($class) && class_exists($class)) {
-			$pks = $class::primaryKey();
+        if (!empty($class) && class_exists($class)) {
+            $pks = $class::primaryKey();
 
-			if (count($pks) === 1 && isset($this->queryParams['filter'])) {
-				$primaryKey = current($pks);
-				if (isset($this->queryParams['filter'][$primaryKey])) {
-					$this->pathInfo .= '/'.$this->queryParams['filter'][$primaryKey];
-				}
-			}
-		}
+            if (count($pks) === 1 && isset($this->queryParams['filter'])) {
+                $primaryKey = current($pks);
+                if (isset($this->queryParams['filter'][$primaryKey])) {
+                    $this->uri .= '/' . $this->queryParams['filter'][$primaryKey];
+                    unset($this->queryParams['filter'][$primaryKey]);
+                    $this->queryParams = array_filter($this->queryParams);
+                }
+            }
+        }
 
-		return $this->queryInternal();
-	}
+        return $this->queryInternal();
+    }
 
-	/**
-	 * Performs the actual get statment
-	 *
-	 * @param string $method
-	 *
-	 * @return mixed
-	 */
-	protected function queryInternal($method = 'get') {
-		if (strpos($this->pathInfo, '/') === false) {
-			$this->pathInfo = Inflector::pluralize($this->pathInfo);
-		}
+    /**
+     * Performs the actual get statment
+     *
+     * @param string $method
+     *
+     * @return mixed
+     */
+    protected function queryInternal($method = 'get') {
+        if (strpos($this->uri, '/') === false) {
+            $this->uri = Inflector::pluralize($this->uri);
+        }
+        if (!empty($this->queryParams)) {
+            $this->uri .= ('?' . http_build_query($this->queryParams));
+            $this->queryParams = [];
+        }
+        return $this->db->$method($this->uri, $this->queryParams);
+    }
 
-		return $this->db->$method($this->pathInfo, $this->queryParams);
-	}
+    /**
+     * Make request and check for error.
+     *
+     * @param string $method
+     *
+     * @return mixed
+     */
+    public function execute($method = 'get') {
+        return $this->queryInternal($method);
+    }
 
-	/**
-	 * Make request and check for error.
-	 *
-	 * @param string $method
-	 *
-	 * @return mixed
-	 */
-	public function execute($method = 'get') {
-		return $this->queryInternal($method);
-	}
+    /**
+     * Creates a new record
+     *
+     * @param string $model
+     * @param array $columns
+     *
+     * @return mixed
+     */
+    public function insert($model, $columns) {
+        $this->uri = $model;
 
-	/**
-	 * Creates a new record
-	 *
-	 * @param string $model
-	 * @param array $columns
-	 *
-	 * @return mixed
-	 */
-	public function insert($model, $columns) {
-		$this->pathInfo = $model;
+        return $this->db->post($this->uri, $columns);
+    }
 
-		return $this->db->post($this->pathInfo, $columns);
-	}
+    /**
+     * Updates an existing record
+     *
+     * @param string $model
+     * @param array $data
+     * @param string $id
+     *
+     * @return mixed
+     */
+    public function update($model, $data = [], $id = null) {
+        $this->uri = $model;
+        if ($id) {
+            $this->uri .= '/' . $id;
+        }
 
-	/**
-	 * Updates an existing record
-	 *
-	 * @param string $model
-	 * @param array $data
-	 * @param string $id
-	 *
-	 * @return mixed
-	 */
-	public function update($model, $data = [], $id = null) {
-		$this->pathInfo = $model;
-		if ($id) {
-			$this->pathInfo .= '/'.$id;
-		}
+        return $this->db->put($this->uri, $data);
+    }
 
-		return $this->db->put($this->pathInfo, $data);
-	}
+    /**
+     * Deletes a record
+     *
+     * @param string $model
+     * @param string $id
+     *
+     * @return mixed
+     */
+    public function delete($model, $id = null) {
+        $this->uri = $model;
+        if ($id) {
+            $this->uri .= '/' . $id;
+        }
 
-	/**
-	 * Deletes a record
-	 *
-	 * @param string $model
-	 * @param string $id
-	 *
-	 * @return mixed
-	 */
-	public function delete($model, $id = null) {
-		$this->pathInfo = $model;
-		if ($id) {
-			$this->pathInfo .= '/'.$id;
-		}
-
-		return $this->db->delete($this->pathInfo);
-	}
+        return $this->db->delete($this->uri);
+    }
 }

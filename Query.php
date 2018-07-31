@@ -9,6 +9,12 @@ use Yii;
  * Class Query
  */
 class Query extends \yii\db\Query implements QueryInterface {
+
+    /**
+     * @var string action that this query performs
+     */
+    public $action;
+
     /**
      * @var string the model to be selected from
      * @see from()
@@ -41,12 +47,11 @@ class Query extends \yii\db\Query implements QueryInterface {
      *
      * @return Command the created DB command instance.
      */
-    public function createCommand($db = null) {
+    public function createCommand($db = null, $action = 'get') {
         if ($db === null) {
             $db = Yii::$app->get(Connection::getDriverName());
         }
-
-        $commandConfig = $db->getQueryBuilder()->build($this);
+        $commandConfig = $db->getQueryBuilder()->build($this->addAction($action));
 
         return $db->createCommand($commandConfig);
     }
@@ -64,8 +69,7 @@ class Query extends \yii\db\Query implements QueryInterface {
         if ($this->emulateExecution) {
             return 0;
         }
-
-        $result = $this->createCommand($db)->execute('head');
+        $result = $this->createCommand($db, 'count')->execute('head');
 
         /* @var $result \yii\web\HeaderCollection */
 
@@ -80,7 +84,7 @@ class Query extends \yii\db\Query implements QueryInterface {
             return false;
         }
 
-        $result = $this->createCommand($db)->execute('head');
+        $result = $this->createCommand($db, 'exists')->execute('head');
 
         /* @var $result \yii\web\HeaderCollection */
         return ($result->get('x-pagination-total-count', 0) > 0);
@@ -95,6 +99,20 @@ class Query extends \yii\db\Query implements QueryInterface {
      */
     public function from($tables) {
         $this->from = $tables;
+
+        return $this;
+    }
+
+    public function action($action) {
+        $this->action = $action;
+
+        return $this;
+    }
+
+    public function addAction($action) {
+        if (empty($this->action)) {
+            $this->action = $action;
+        }
 
         return $this;
     }

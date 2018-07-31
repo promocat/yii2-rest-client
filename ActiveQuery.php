@@ -44,7 +44,7 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
      *
      * @return Command the created DB command instance.
      */
-    public function createCommand($db = null) {
+    public function createCommand($db = null, $action = 'get') {
         /**
          * @var ActiveRecord $modelClass
          */
@@ -62,7 +62,7 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
 //			$this->searchModel = mb_substr(mb_strrchr($this->modelClass, '\\'), 1).'Search';
 //		}
 
-        return parent::createCommand($db);
+        return parent::createCommand($db, $action);
     }
 
     /**
@@ -197,23 +197,15 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
         foreach ($this->joinWith as $with) {
             $this->joinWithRelations($model, $with);
             foreach ($with as $name => $callback) {
-                $this->innerJoin(is_int($name) ? [$callback] : [$name => $callback]);
+                $this->innerJoin(is_int($name) ? $callback : [$name => $callback]);
                 unset($with[$name]);
             }
         }
 
-//        if (!empty($join)) {
-//            // append explicit join to joinWith()
-//            // https://github.com/yiisoft/yii2/issues/2880
-//            $this->join = empty($this->join) ? $join : array_merge($this->join, $join);
-//        }
-
-        $this->addSelect(['*' => '*']);
-        foreach ($this->joinWith as $join) {
-            $keys = array_keys($join);
-            $key = array_shift($keys);
-            $closure = array_shift($join);
-            $this->addSelect(is_int($key) ? $closure : $key);
+        if (!empty($join)) {
+            // append explicit join to joinWith()
+            // https://github.com/yiisoft/yii2/issues/2880
+            $this->join = empty($this->join) ? $join : array_merge($this->join, $join);
         }
 
     }

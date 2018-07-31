@@ -63,27 +63,49 @@ class QueryBuilder extends \yii\db\QueryBuilder {
 
         $params = empty($params) ? $query->params : array_merge($params, $query->params);
 
+        $query = $this->prepareQuery($query);
+
+        $uri = $this->buildUri($query);
+
+        $headers = $this->buildHeaders($query);
+
         $clauses = [
             'fields' => $this->buildSelect($query->select, $params),
-            'pathInfo' => $this->buildFrom($query->from, $params),
             'expand' => $this->buildJoin($query->join, $params),
-            'filter' => $this->buildWhere($query->where, $params) + $this->buildLink($query, $params),
+            'filter' => $this->buildWhere($query->where, $params),
             'sort' => $this->buildOrderBy($query->orderBy)
         ];
-
         $clauses = array_merge($clauses, $this->buildLimit($query->limit, $query->offset));
-
-        foreach ($clauses as $key => $clause) {
-            if ($clause === "" || (is_array($clause) && empty($clause)) || null === $clause) {
-                unset($clauses[$key]);
-            }
-        }
 
         return [
             'modelClass' => ArrayHelper::getValue($query, 'modelClass', ''),
-            'pathInfo' => ArrayHelper::remove($clauses, 'pathInfo'),
-            'queryParams' => $clauses
+            'uri' => $uri,
+            'headers' => $headers,
+            'queryParams' => array_filter($clauses),
+            'action' => $query->action
         ];
+    }
+
+    public function buildUri($query) {
+        if (!is_string($query->from)) {
+            return '';
+        }
+        $uri = trim($query->from);
+        return $uri;
+    }
+
+    public function prepareQuery($query) {
+        if (empty($query->where)) {
+            $query->where = [];
+        }
+        if (isset($query->primaryModel)) {
+            foreach ($query->link as $filterAttribute => $valueAttribute) {
+                if (isset($query->primaryModel->{$valueAttribute})) {
+                    $query->where([$filterAttribute => $query->primaryModel->{$valueAttribute}]);
+                }
+            }
+        }
+        return $query;
     }
 
     /**
@@ -101,40 +123,9 @@ class QueryBuilder extends \yii\db\QueryBuilder {
         }
     }
 
-//    public function buildMethod(Query $query) {
-//        static $defaultMethods = [
-//            'get' => 'GET',
-//            'put' => 'PUT',
-//            'head' => 'HEAD',
-//            'post' => 'GET',
-//            'search' => 'GET',
-//            'insert' => 'POST',
-//            'update' => 'PUT',
-//            'delete' => 'DELETE',
-//        ];
-//
-//        return isset($defaultMethods[$query->action]) ? $defaultMethods[$query->action] : 'POST';
-//    }
-//
-//    public function buildUri(Query $query) {
-//        return $query->from;
-//    }
-//
-//    public function buildHeaders(Query $query) {
-//        return $this->authHeaders;
-//    }
-//
-//    public function buildProtocolVersion(Query $query) {
-//        return null;
-//    }
-//
-//    public function buildQueryParams(Query $query) {
-//        return $query->where;
-//    }
-//
-//    public function buildFormParams(Query $query) {
-//        return [];
-//    }
+    public function buildHeaders($query) {
+        return $this->authHeaders;
+    }
 
     /**
      * @inheritdoc
