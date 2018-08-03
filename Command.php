@@ -35,12 +35,12 @@ class Command extends Component {
     /**
      * @var array
      */
-    public $queryParams;
+    public $queryParams = [];
 
     /**
      * @var array
      */
-    public $headers;
+    public $headers = [];
 
     /**
      * @return mixed
@@ -87,7 +87,7 @@ class Command extends Component {
             $this->uri .= ('?' . http_build_query($this->queryParams));
             $this->queryParams = [];
         }
-        return $this->db->$method($this->uri, $this->queryParams);
+        return $this->db->$method($this->uri, $this->queryParams, $this->headers);
     }
 
     /**
@@ -112,7 +112,7 @@ class Command extends Component {
     public function insert($model, $columns) {
         $this->uri = $model;
 
-        return $this->db->post($this->uri, $columns);
+        return $this->db->post($this->uri, $columns, $this->headers);
     }
 
     /**
@@ -130,7 +130,7 @@ class Command extends Component {
             $this->uri .= '/' . $id;
         }
 
-        return $this->db->put($this->uri, $data);
+        return $this->db->put($this->uri, $data, $this->headers);
     }
 
     /**
@@ -147,6 +147,6 @@ class Command extends Component {
             $this->uri .= '/' . $id;
         }
 
-        return $this->db->delete($this->uri);
+        return $this->db->delete($this->uri, [], $this->headers);
     }
 }

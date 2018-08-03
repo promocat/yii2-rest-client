@@ -158,9 +158,9 @@ class Connection extends Component {
      * @throws \yii\base\InvalidConfigException
      * @return mixed response
      */
-    public function get($url, $data = []) {
+    public function get($url, $data = [], $headers = []) {
         try {
-            return $this->request('get', $url, $data);
+            return $this->request('get', $url, $data, $headers);
         } catch (Exception $e) {
             return false;
         }
@@ -175,9 +175,8 @@ class Connection extends Component {
      * @throws \yii\base\InvalidConfigException
      * @return HeaderCollection response
      */
-    public function head($url, $data = []) {
-        $this->request('head', $url, $data);
-
+    public function head($url, $data = [], $headers = []) {
+        $this->request('head', $url, $headers);
         return $this->_response->headers;
     }
 
@@ -190,8 +189,8 @@ class Connection extends Component {
      * @throws \yii\base\InvalidConfigException
      * @return mixed response
      */
-    public function post($url, $data = []) {
-        return $this->request('post', $url, $data);
+    public function post($url, $data = [], $headers = []) {
+        return $this->request('post', $url, $data, $headers);
     }
 
     /**
@@ -203,8 +202,8 @@ class Connection extends Component {
      * @throws \yii\base\InvalidConfigException
      * @return mixed response
      */
-    public function put($url, $data = []) {
-        return $this->request('put', $url, $data);
+    public function put($url, $data = [], $headers = []) {
+        return $this->request('put', $url, $data, $headers);
     }
 
     /**
@@ -216,8 +215,8 @@ class Connection extends Component {
      * @throws \yii\base\InvalidConfigException
      * @return mixed response
      */
-    public function delete($url, $data = []) {
-        return $this->request('delete', $url, $data);
+    public function delete($url, $data = [], $headers = []) {
+        return $this->request('delete', $url, $data, $headers);
     }
 
     /**
@@ -230,11 +229,11 @@ class Connection extends Component {
      *
      * @return Response|false
      */
-    protected function request($method, $url, $data = []) {
+    protected function request($method, $url, $data = [], $headers = []) {
         $method = strtoupper($method);
         $profile = $method . ' ' . $url . '#' . (is_array($data) ? http_build_query($data) : $data);
         Yii::beginProfile($profile, __METHOD__);
-        $this->_response = call_user_func([$this->handler, $method], $url, $data)->send();
+        $this->_response = call_user_func([$this->handler, $method], $url, $data, $headers)->send();
         Yii::endProfile($profile, __METHOD__);
 
         if (!$this->_response->isOk) {

@@ -11,8 +11,6 @@ use yii\helpers\ArrayHelper;
  */
 class QueryBuilder extends \yii\db\QueryBuilder {
 
-    protected $authHeaders = [];
-
     /**
      * @var Connection the database connection.
      */
@@ -67,7 +65,7 @@ class QueryBuilder extends \yii\db\QueryBuilder {
 
         $uri = $this->buildUri($query);
 
-        $headers = $this->buildHeaders($query);
+        $headers = $this->buildAuth($query);
 
         $clauses = [
             'fields' => $this->buildSelect($query->select, $params),
@@ -113,18 +111,16 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      *
      * @param Query $query
      */
-    public function buildAuth(Query $query) {
+    public function buildAuth($query) {
+        $headers = [];
         $auth = $this->db->getAuth();
         if (isset($auth['headerToken'])) {
-            $this->authHeaders['Authorization'] = 'token ' . $auth['headerToken'];
+            $headers['Authorization'] = 'token ' . $auth['headerToken'];
         }
         if (isset($auth['headerBearer'])) {
-            $this->authHeaders['Authorization'] = 'Bearer ' . $auth['headerBearer'];
+            $headers['Authorization'] = 'Bearer ' . $auth['headerBearer'];
         }
-    }
-
-    public function buildHeaders($query) {
-        return $this->authHeaders;
+        return $headers;
     }
 
     /**
