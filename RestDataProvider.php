@@ -16,6 +16,37 @@ class RestDataProvider extends ActiveDataProvider {
      */
     public $query;
 
+    protected function prepareModels() {
+        if (!$this->query instanceof QueryInterface) {
+            throw new InvalidConfigException('The "query" property must be an instance of a class that implements the QueryInterface e.g. yii\db\Query or its subclasses.');
+        }
+        $query = clone $this->query;
+        $pagination = $this->getPagination();
+
+        if ($pagination !== false) {
+            //Disable validatePage. The totalPageCount won't be available till after the query.
+            $pagination->validatePage = false;
+            $query->limit($pagination->getLimit())->offset($pagination->getOffset());
+        }
+        if (($sort = $this->getSort()) !== false) {
+            $query->addOrderBy($sort->getOrders());
+        }
+
+        $command = $query->createCommand($this->db);
+        $rows = $command->queryAll();
+        if ($pagination !== false) {
+            if (($response = $command->db->getResponse()) !== null) { //Get the response object from previous query.
+                $pagination->totalCount = (int)$response->headers->get('x-pagination-total-count');
+                $this->setTotalCount($pagination->totalCount);
+            }
+            if ($pagination->totalCount === 0) {
+                return [];
+            }
+        }
+
+        return $query->populate($rows);
+    }
+
     /**
      * @inheritdoc
      */
