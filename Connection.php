@@ -150,6 +150,18 @@ class Connection extends Component {
     }
 
     /**
+     * Returns the response object.
+     *
+     * @return null|Response
+     */
+    public function getResponse() {
+        if(isset($this->_response)) {
+            return $this->_response;
+        }
+        return null;
+    }
+
+    /**
      * Performs GET HTTP request.
      *
      * @param string $url URL
