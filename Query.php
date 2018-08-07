@@ -116,4 +116,49 @@ class Query extends \yii\db\Query implements QueryInterface {
 
         return $this;
     }
+
+    /**
+     * Executes the query and returns the first column of the result.
+     * Order of indexBy() and select() is now irrelevant.
+     *
+     * @param Connection $db the database connection used to generate the SQL statement.
+     * If this parameter is not given, the `db` application component will be used.
+     *
+     * @return array the first column of the query result. An empty array is returned if the query results in nothing.
+     */
+    public function column($db = null) {
+        if ($this->emulateExecution) {
+            return [];
+        }
+
+        if ($this->indexBy === null) {
+            return $this->createCommand($db)->queryColumn();
+        }
+        $valueColumn = false;
+        if (is_string($this->indexBy) && is_array($this->select) && count($this->select) === 1) {
+            $valueColumn = reset($this->select);
+            if (strpos($this->indexBy, '.') === false && count($tables = $this->getTablesUsedInFrom()) > 0) {
+                $this->select[] = key($tables) . '.' . $this->indexBy;
+            } else {
+                $this->select[] = $this->indexBy;
+            }
+        }
+        $rows = $this->createCommand($db)->queryAll();
+        $results = [];
+
+        foreach ($rows as $row) {
+            if ($valueColumn === false || !isset($row[$valueColumn])) {
+                $value = reset($row);
+            } else {
+                $value = $row[$valueColumn];
+            }
+            if ($this->indexBy instanceof \Closure) {
+                $results[call_user_func($this->indexBy, $row)] = $value;
+            } else {
+                $results[$row[$this->indexBy]] = $value;
+            }
+        }
+
+        return $results;
+    }
 }
