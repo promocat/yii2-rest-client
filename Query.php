@@ -144,21 +144,22 @@ class Query extends \yii\db\Query implements QueryInterface {
             }
         }
         $rows = $this->createCommand($db)->queryAll();
-        $results = [];
 
-        foreach ($rows as $row) {
-            if ($valueColumn === false || !isset($row[$valueColumn])) {
-                $value = reset($row);
-            } else {
-                $value = $row[$valueColumn];
-            }
-            if ($this->indexBy instanceof \Closure) {
-                $results[call_user_func($this->indexBy, $row)] = $value;
-            } else {
-                $results[$row[$this->indexBy]] = $value;
+        $results = [];
+        if ($rows !== false) {
+            foreach ($rows as $row) {
+                if ($valueColumn === false || !isset($row[$valueColumn])) {
+                    $value = reset($row);
+                } else {
+                    $value = $row[$valueColumn];
+                }
+                if ($this->indexBy instanceof \Closure) {
+                    $results[call_user_func($this->indexBy, $row)] = $value;
+                } else {
+                    $results[$row[$this->indexBy]] = $value;
+                }
             }
         }
-
         return $results;
     }
 }
