@@ -95,8 +95,7 @@ class ActiveRecord extends BaseActiveRecord {
      * @return ActiveQuery
      */
     public static function find() {
-        $class = static::getDb()->activeQueryClass;
-        return new $class(get_called_class());
+        return static::createQuery();
     }
 
     /**
@@ -104,8 +103,8 @@ class ActiveRecord extends BaseActiveRecord {
      * @throws InvalidConfigException
      */
     private static function createQuery() {
-        /* @var $query ActiveQuery */
-        return Yii::createObject(self::$activeQueryClass, [get_called_class()]);
+        $class = static::getDb()->activeQueryClass;
+        return new $class(get_called_class());
     }
 
     /**
