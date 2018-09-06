@@ -20,11 +20,6 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
     public $joinWith = [];
 
     /**
-     * @var array options for search
-     */
-    public $options = [];
-
-    /**
      * Constructor.
      *
      * @param string $modelClass the model class associated with this query

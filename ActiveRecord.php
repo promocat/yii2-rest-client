@@ -13,6 +13,7 @@ use Yii;
  * Class ActiveRecord
  */
 class ActiveRecord extends BaseActiveRecord {
+
     /**
      * @var boolean if in construction process (modifies behavior of hasAttribute method)
      */
@@ -93,16 +94,18 @@ class ActiveRecord extends BaseActiveRecord {
      *
      * @return ActiveQuery
      */
-    public static function find($options = []) {
-        $config = [
-            'class' => 'promocat\rest\ActiveQuery',
-            'options' => $options
-        ];
+    public static function find() {
+        $class = static::getDb()->activeQueryClass;
+        return new $class(get_called_class());
+    }
 
+    /**
+     * @return ActiveQuery
+     * @throws InvalidConfigException
+     */
+    private static function createQuery() {
         /* @var $query ActiveQuery */
-        $query = Yii::createObject($config, [get_called_class()]);
-
-        return $query;
+        return Yii::createObject(self::$activeQueryClass, [get_called_class()]);
     }
 
     /**
@@ -164,7 +167,8 @@ class ActiveRecord extends BaseActiveRecord {
             return false;
         }
         $values = $this->getDirtyAttributes($attributes);
-        if (false === ($data = static::getDb()->createCommand()->insert(static::modelName(), $values))) {
+        $command = static::createQuery()->createCommand(null, 'insert');
+        if (false === ($data = $command->insert($command->uri, $values))) {
             return false;
         }
         foreach ($data as $name => $value) {
@@ -201,13 +205,11 @@ class ActiveRecord extends BaseActiveRecord {
         $values = $this->getDirtyAttributes($attributes);
         if (empty($values)) {
             $this->afterSave(false, $values);
-
             return 0;
         }
-
-        $command = static::getDb()->createCommand();
-        $rows = $command->update(static::modelName(), $values, $this->getOldPrimaryKey(false));
-
+        $command = static::createQuery()->createCommand(null, 'update');
+        $result = $command->update($command->uri, $values, $this->getOldPrimaryKey(false));
+        // TODO: Maybe we should use the values in the response?
         $changedAttributes = [];
         foreach ($values as $name => $value) {
             $changedAttributes[$name] = $this->getOldAttribute($name);
@@ -215,7 +217,7 @@ class ActiveRecord extends BaseActiveRecord {
         }
         $this->afterSave(false, $changedAttributes);
 
-        return $rows;
+        return $result !== false ? 1 : 0;
     }
 
 
@@ -225,8 +227,8 @@ class ActiveRecord extends BaseActiveRecord {
     public function delete() {
         $result = false;
         if ($this->beforeDelete()) {
-            $command = static::getDb()->createCommand();
-            $result = $command->delete(static::modelName(), $this->getOldPrimaryKey());
+            $command = static::createQuery()->createCommand(null, 'delete');
+            $result = $command->delete($command->uri, $this->getOldPrimaryKey());
 
             $this->setOldAttributes(null);
             $this->afterDelete();

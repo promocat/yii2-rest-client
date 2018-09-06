@@ -104,49 +104,52 @@ class Command extends Component {
     /**
      * Creates a new record
      *
-     * @param string $model
+     * @param string $uri
      * @param array $columns
      *
      * @return mixed
      */
-    public function insert($model, $columns) {
-        $this->uri = $model;
-
+    public function insert($uri, $columns) {
+        if($uri !== null) {
+            $this->uri = $uri;
+        }
         return $this->db->post($this->uri, $columns, $this->headers);
     }
 
     /**
      * Updates an existing record
      *
-     * @param string $model
+     * @param string $uri
      * @param array $data
      * @param string $id
      *
      * @return mixed
      */
-    public function update($model, $data = [], $id = null) {
-        $this->uri = $model;
+    public function update($uri, $data = [], $id = null) {
+        if($uri !== null) {
+            $this->uri = $uri;
+        }
         if ($id) {
             $this->uri .= '/' . $id;
         }
-
         return $this->db->put($this->uri, $data, $this->headers);
     }
 
     /**
      * Deletes a record
      *
-     * @param string $model
+     * @param string $uri
      * @param string $id
      *
      * @return mixed
      */
-    public function delete($model, $id = null) {
-        $this->uri = $model;
+    public function delete($uri, $id = null) {
+        if($uri !== null) {
+            $this->uri = $uri;
+        }
         if ($id) {
             $this->uri .= '/' . $id;
         }
-
         return $this->db->delete($this->uri, [], $this->headers);
     }
 }

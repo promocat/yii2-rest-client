@@ -48,6 +48,10 @@ class Connection extends Component {
      * @var array response config configuration.
      */
     public $responseConfig = [];
+    /**
+     * @var array response config configuration.
+     */
+    public $activeQueryClass = 'promocat\rest\ActiveQuery';
 
     /**
      * @var Client
