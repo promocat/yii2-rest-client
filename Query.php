@@ -45,6 +45,8 @@ class Query extends \yii\db\Query implements QueryInterface {
      * @param Connection $db the connection used to generate the statement.
      * If this parameter is not given, the `rest` application component will be used.
      *
+     * @param string $action
+     *
      * @return Command the created DB command instance.
      */
     public function createCommand($db = null, $action = 'get') {
@@ -54,6 +56,16 @@ class Query extends \yii\db\Query implements QueryInterface {
         $commandConfig = $db->getQueryBuilder()->build($this->addAction($action));
 
         return $db->createCommand($commandConfig);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function one($db = null, $action = 'view') {
+        if ($this->emulateExecution) {
+            return false;
+        }
+        return $this->createCommand($db, $action)->queryOne();
     }
 
     /**
