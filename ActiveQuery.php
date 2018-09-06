@@ -149,8 +149,8 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
     /**
      * @inheritdoc
      */
-    public function one($db = null) {
-        $row = parent::one($db);
+    public function one($db = null, $action = 'view') {
+        $row = parent::one($db, $action);
         if ($row !== false) {
             $models = $this->populate(isset($row[0]) ? $row : [$row]);
 
