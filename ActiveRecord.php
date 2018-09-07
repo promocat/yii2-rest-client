@@ -16,12 +16,23 @@ use Yii;
 class ActiveRecord extends BaseActiveRecord {
 
     /**
+     * @var boolean if in construction process (modifies behavior of hasAttribute method)
+     */
+    private $_isConstructing = false;
+
+    /**
+     * @var array attribute names indexed array of null values
+     */
+    private $_attributeNames = [];
+
+    /**
      * Constructors.
      *
      * @param array $attributes the dynamic attributes (name-value pairs, or names) being defined
      * @param array $config the configuration array to be applied to this object.
      */
     public function __construct(array $attributes = [], $config = []) {
+        $this->_isConstructing = true;
         $setOld = true;
         $keys = $this->primaryKey();
         foreach ($keys as $key) {
@@ -40,6 +51,7 @@ class ActiveRecord extends BaseActiveRecord {
         if ($setOld) {
             $this->setOldAttributes($attributes);
         }
+        $this->_isConstructing = false;
         parent::__construct($config);
     }
 
@@ -53,12 +65,18 @@ class ActiveRecord extends BaseActiveRecord {
     /**
      * @inheritdoc
      */
+    public function hasAttribute($name) {
+        return $this->_isConstructing ? true : parent::hasAttribute($name);
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function setAttribute($name, $value) {
-        try {
-            parent::setAttribute($name, $value);
-        } catch (InvalidArgumentException $e) {
-            // ignore none existing attributes
+        if ($this->hasAttribute($name)) {
+            $this->_attributeNames[$name] = null;
         }
+        parent::setAttribute($name, $value);
     }
 
     /**
