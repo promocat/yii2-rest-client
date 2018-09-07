@@ -2,6 +2,7 @@
 
 namespace promocat\rest;
 
+use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 use yii\db\BaseActiveRecord;
