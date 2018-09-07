@@ -5,6 +5,7 @@ namespace promocat\rest;
 use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
+use yii\db\ActiveQueryInterface;
 use yii\db\BaseActiveRecord;
 use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
@@ -16,9 +17,9 @@ use Yii;
 class ActiveRecord extends BaseActiveRecord {
 
     /**
-     * @var boolean if in construction process (modifies behavior of hasAttribute method)
+     * @var array records that are related and where the data can be fetched by using join/joinWith
      */
-    private $_isConstructing = false;
+    private $_relatedRecords = [];
 
     /**
      * Constructors.
@@ -27,7 +28,6 @@ class ActiveRecord extends BaseActiveRecord {
      * @param array $config the configuration array to be applied to this object.
      */
     public function __construct(array $attributes = [], $config = []) {
-        $this->_isConstructing = true;
         $setOld = true;
         $keys = $this->primaryKey();
         foreach ($keys as $key) {
@@ -46,8 +46,28 @@ class ActiveRecord extends BaseActiveRecord {
         if ($setOld) {
             $this->setOldAttributes($attributes);
         }
-        $this->_isConstructing = false;
         parent::__construct($config);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function populateRecord($record, $row) {
+        parent::populateRecord($record, $row);
+        $relatedRecords = $record->relatedRecords();
+        foreach ($relatedRecords as $name) {
+            if (isset($row[$name])) {
+                $value = $row[$name];
+                if ($record->canGetProperty($name)) {
+                    $getter = 'get' . $name;
+                    $relation = $record->$getter();
+                    if ($relation instanceof ActiveQueryInterface) {
+                        $models = $relation->modelClass::find()->populate(isset($value[0]) ? $value : [$value]);
+                        $record->populateRelation($name, reset($models) ?: $models);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -57,11 +77,8 @@ class ActiveRecord extends BaseActiveRecord {
         return new static($row);
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function hasAttribute($name) {
-        return $this->_isConstructing ? true : parent::hasAttribute($name);
+    public function relatedRecords() {
+        return $this->_relatedRecords;
     }
 
     /**
