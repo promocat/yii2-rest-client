@@ -72,7 +72,7 @@ class ActiveRecord extends BaseActiveRecord {
      * @inheritdoc
      */
     public function setAttribute($name, $value) {
-        if ($this->hasAttribute($name)) {
+        if (!$this->hasAttribute($name)) {
             $this->_attributeNames[$name] = null;
         }
         parent::setAttribute($name, $value);
