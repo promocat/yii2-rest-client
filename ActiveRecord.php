@@ -21,11 +21,6 @@ class ActiveRecord extends BaseActiveRecord {
     private $_isConstructing = false;
 
     /**
-     * @var array attribute names indexed array of null values
-     */
-    private $_attributeNames = [];
-
-    /**
      * Constructors.
      *
      * @param array $attributes the dynamic attributes (name-value pairs, or names) being defined
@@ -73,10 +68,11 @@ class ActiveRecord extends BaseActiveRecord {
      * @inheritdoc
      */
     public function setAttribute($name, $value) {
-        if ($this->hasAttribute($name)) {
-            $this->_attributeNames[$name] = null;
+        try {
+            parent::setAttribute($name, $value);
+        } catch (InvalidArgumentException $e) {
+            // do nothing
         }
-        parent::setAttribute($name, $value);
     }
 
     /**
