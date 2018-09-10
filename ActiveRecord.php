@@ -60,10 +60,11 @@ class ActiveRecord extends BaseActiveRecord {
                 $value = $row[$name];
                 if ($record->canGetProperty($name)) {
                     $getter = 'get' . $name;
+                    /** @var ActiveQuery $relation */
                     $relation = $record->$getter();
                     if ($relation instanceof ActiveQueryInterface) {
-                        $models = $relation->modelClass::find()->populate(isset($value[0]) ? $value : [$value]);
-                        $record->populateRelation($name, reset($models) ?: $models);
+                        $models = $relation->modelClass::find()->populate($relation->multiple ? $value : [$value]);
+                        $record->populateRelation($name, $relation->multiple ? $models : reset($models));
                     }
                 }
             }

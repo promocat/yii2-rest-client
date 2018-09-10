@@ -90,7 +90,7 @@ class QueryBuilder extends \yii\db\QueryBuilder {
         }
         $uri = trim($query->from);
         if($query->action)
-        return $uri;
+            return $uri;
     }
 
     public function prepareQuery($query) {
