@@ -61,11 +61,49 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
     }
 
     /**
-     * NOTE: THIS METHOD ONLY RETRIEVES THE FIRST PAGE!!!
      * @inheritdoc
+     *
+     * @param bool $recurse Set to true, to really fetch all results spanning all pages!
+     * @param null $db
+     *
+     * @return array
      */
-    public function all($db = null) {
+    public function all($recurse = false, $db = null) {
+        if ($recurse) {
+            if ($this->emulateExecution) {
+                return [];
+            }
+            $rows = $this->recurseAll($db);
+            return $this->populate($rows);
+        }
         return parent::all($db);
+    }
+
+    private function recurseAll($db, &$rows = null) {
+        $command = $this->createCommand($db);
+
+        if($rows === null) {
+            $rows = $command->queryAll();
+        } else {
+            $rows = array_merge($rows, $command->queryAll());
+        }
+
+        /**
+         * Get the response object
+         */
+        if (($response = $command->db->getResponse()) !== null) {
+            $pageCount = (int)$response->headers->get('x-pagination-page-count');
+            $currentPage = (int)$response->headers->get('x-pagination-current-page');
+
+            if ($currentPage < $pageCount) { // We have not reached the end
+                $perPage = (int)$response->headers->get('x-pagination-per-page');
+                $this->offset($currentPage * $perPage);
+                // Make another request!
+                $this->recurseAll($db, $rows);
+            }
+
+        }
+        return $rows;
     }
 
     /**

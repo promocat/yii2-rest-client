@@ -56,9 +56,8 @@ class Command extends Component {
         /* @var $class ActiveRecord */
         $class = $this->modelClass;
 
-        if (!empty($class) && class_exists($class)) {
+        if ($this->action === 'view' && !empty($class) && class_exists($class)) {
             $pks = $class::primaryKey();
-
             if (count($pks) === 1 && isset($this->queryParams['filter'])) {
                 $primaryKey = current($pks);
                 if (isset($this->queryParams['filter'][$primaryKey])) {
