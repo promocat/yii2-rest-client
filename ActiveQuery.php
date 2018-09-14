@@ -61,6 +61,7 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
     }
 
     /**
+     * NOTE: THIS METHOD ONLY RETRIEVES THE FIRST PAGE!!!
      * @inheritdoc
      */
     public function all($db = null) {
