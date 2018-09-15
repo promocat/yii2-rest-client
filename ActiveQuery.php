@@ -18,6 +18,11 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
      * @var array|null a list of relations that this query should be joined with
      */
     public $joinWith = [];
+    
+    /**
+     * @var boolean Wheter to unset the indexBy value from the results.
+     */
+    public $unsetIndexBy = false;
 
     /**
      * Constructor.
