@@ -6,6 +6,7 @@ use yii\base\InvalidConfigException;
 use yii\db\ActiveQueryInterface;
 use yii\db\ActiveQueryTrait;
 use yii\db\ActiveRelationTrait;
+use yii\helpers\ArrayHelper;
 
 /**
  * Class RestQuery
