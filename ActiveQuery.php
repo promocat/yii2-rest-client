@@ -106,6 +106,11 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
         return $rows;
     }
 
+    public function indexBy($column, $unset = false) {
+        $this->unsetIndexBy = $unset;
+        return parent::indexBy($column);
+    }
+
     /**
      * @inheritdoc
      */
@@ -125,8 +130,17 @@ class ActiveQuery extends Query implements ActiveQueryInterface {
             foreach ($models as $model) {
                 $model->afterFind();
             }
+        } elseif($this->indexBy !== null) {
+            $result = [];
+            foreach ($models as $model) {
+                $index = ArrayHelper::getValue($model, $this->indexBy);
+                if ($this->unsetIndexBy) {
+                    unset($model[$this->indexBy]);
+                }
+                $result[$index] = $model;
+            }
+            $models = $result;
         }
-
         return $models;
     }
 
