@@ -1,6 +1,6 @@
 <?php
 
-namespace simialbi\yii2\rest\conditions;
+namespace promocat\rest\conditions;
 
 use yii\db\conditions\BetweenCondition;
 use yii\db\ExpressionInterface;
@@ -8,7 +8,7 @@ use yii\db\ExpressionInterface;
 /**
  * {@inheritdoc}
  *
- * @property \simialbi\yii2\rest\QueryBuilder $queryBuilder
+ * @property \promocat\rest\QueryBuilder $queryBuilder
  */
 class BetweenConditionBuilder extends \yii\db\conditions\BetweenConditionBuilder
 {

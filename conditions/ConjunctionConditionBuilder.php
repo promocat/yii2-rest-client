@@ -1,6 +1,6 @@
 <?php
 
-namespace simialbi\yii2\rest\conditions;
+namespace promocat\rest\conditions;
 
 
 use yii\db\conditions\ConjunctionCondition;
@@ -9,7 +9,7 @@ use yii\db\ExpressionInterface;
 /**
  * {@inheritdoc}
  *
- * @property \simialbi\yii2\rest\QueryBuilder $queryBuilder
+ * @property \promocat\rest\QueryBuilder $queryBuilder
  */
 class ConjunctionConditionBuilder extends \yii\db\conditions\ConjunctionConditionBuilder
 {

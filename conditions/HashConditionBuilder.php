@@ -1,9 +1,9 @@
 <?php
 
-namespace simialbi\yii2\rest\conditions;
+namespace promocat\rest\conditions;
 
 
-use simialbi\yii2\rest\Query;
+use promocat\rest\Query;
 use yii\db\conditions\InCondition;
 use yii\db\ExpressionInterface;
 use yii\helpers\ArrayHelper;
@@ -11,7 +11,7 @@ use yii\helpers\ArrayHelper;
 /**
  * {@inheritdoc}
  *
- * @property \simialbi\yii2\rest\QueryBuilder $queryBuilder
+ * @property \promocat\rest\QueryBuilder $queryBuilder
  */
 class HashConditionBuilder extends \yii\db\conditions\HashConditionBuilder
 {
