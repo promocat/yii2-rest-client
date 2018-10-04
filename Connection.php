@@ -2,8 +2,6 @@
 
 namespace promocat\rest;
 
-use Closure;
-
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\httpclient\Client;
@@ -28,13 +26,19 @@ use Yii;
  * ```
  *
  * @property Client $handler
- * @property array $auth
+ * @property null|string|\Closure $auth
  */
-class Connection extends Component {
+class Connection extends Component
+{
     /**
      * @event Event an event that is triggered after a DB connection is established
      */
     const EVENT_AFTER_OPEN = 'afterOpen';
+
+    /**
+     * @var Client
+     */
+    protected static $_handler = null;
 
     /**
      * @var string base request URL.
@@ -53,18 +57,14 @@ class Connection extends Component {
      */
     public $activeQueryClass = 'promocat\rest\ActiveQuery';
 
-    /**
-     * @var Client
-     */
-    protected static $_handler = null;
 
     /**
-     * @var array authorization config
+     * @var string|\Closure authorization config
      */
     protected $_auth = [];
 
     /**
-     * @var Closure Callback to test if API response has error
+     * @var \Closure Callback to test if API response has error
      * The function signature: `function ($response)`
      * Must return `null`, if the response does not contain an error.
      */
@@ -76,10 +76,22 @@ class Connection extends Component {
     protected $_response;
 
     /**
+     * Returns the name of the DB driver. Based on the the current [[dsn]], in case it was not set explicitly
+     * by an end user.
+     *
+     * @return string name of the DB driver
+     */
+    public static function getDriverName()
+    {
+        return 'rest';
+    }
+
+    /**
      * @inheritdoc
      * @throws InvalidConfigException
      */
-    public function init() {
+    public function init()
+    {
         if (!$this->baseUrl) {
             throw new InvalidConfigException('The `baseUrl` config option must be set');
         }
@@ -92,10 +104,11 @@ class Connection extends Component {
     /**
      * Returns the authorization config.
      *
-     * @return array authorization config
+     * @return string authorization config
      */
-    public function getAuth() {
-        if ($this->_auth instanceof Closure) {
+    public function getAuth()
+    {
+        if ($this->_auth instanceof \Closure) {
             $this->_auth = call_user_func($this->_auth, $this);
         }
 
@@ -107,7 +120,8 @@ class Connection extends Component {
      *
      * @param array $auth authorization config
      */
-    public function setAuth($auth) {
+    public function setAuth($auth)
+    {
         $this->_auth = $auth;
     }
 
@@ -116,18 +130,9 @@ class Connection extends Component {
      *
      * @return array
      */
-    public function __sleep() {
+    public function __sleep()
+    {
         return array_keys(get_object_vars($this));
-    }
-
-    /**
-     * Returns the name of the DB driver. Based on the the current [[dsn]], in case it was not set explicitly
-     * by an end user.
-     *
-     * @return string name of the DB driver
-     */
-    public static function getDriverName() {
-        return 'rest';
     }
 
     /**
@@ -137,7 +142,8 @@ class Connection extends Component {
      *
      * @return Command the DB command
      */
-    public function createCommand($config = []) {
+    public function createCommand($config = [])
+    {
         $config['db'] = $this;
         $command = new Command($config);
 
@@ -149,7 +155,8 @@ class Connection extends Component {
      *
      * @return QueryBuilder
      */
-    public function getQueryBuilder() {
+    public function getQueryBuilder()
+    {
         return new QueryBuilder($this);
     }
 
@@ -158,8 +165,9 @@ class Connection extends Component {
      *
      * @return null|Response
      */
-    public function getResponse() {
-        if(isset($this->_response)) {
+    public function getResponse()
+    {
+        if (isset($this->_response)) {
             return $this->_response;
         }
         return null;
@@ -174,12 +182,9 @@ class Connection extends Component {
      * @throws \yii\base\InvalidConfigException
      * @return mixed response
      */
-    public function get($url, $data = [], $headers = []) {
-        try {
-            return $this->request('get', $url, $data, $headers);
-        } catch (Exception $e) {
-            return false;
-        }
+    public function get($url, $data = [], $headers = [])
+    {
+        return $this->request('get', $url, $data, $headers);
     }
 
     /**
@@ -191,7 +196,8 @@ class Connection extends Component {
      * @throws \yii\base\InvalidConfigException
      * @return HeaderCollection response
      */
-    public function head($url, $data = [], $headers = []) {
+    public function head($url, $data = [], $headers = [])
+    {
         $this->request('head', $url, $headers);
         return $this->_response->headers;
     }
@@ -205,7 +211,8 @@ class Connection extends Component {
      * @throws \yii\base\InvalidConfigException
      * @return mixed response
      */
-    public function post($url, $data = [], $headers = []) {
+    public function post($url, $data = [], $headers = [])
+    {
         return $this->request('post', $url, $data, $headers);
     }
 
@@ -218,7 +225,8 @@ class Connection extends Component {
      * @throws \yii\base\InvalidConfigException
      * @return mixed response
      */
-    public function put($url, $data = [], $headers = []) {
+    public function put($url, $data = [], $headers = [])
+    {
         return $this->request('put', $url, $data, $headers);
     }
 
@@ -231,7 +239,8 @@ class Connection extends Component {
      * @throws \yii\base\InvalidConfigException
      * @return mixed response
      */
-    public function delete($url, $data = [], $headers = []) {
+    public function delete($url, $data = [], $headers = [])
+    {
         return $this->request('delete', $url, $data, $headers);
     }
 
@@ -241,7 +250,8 @@ class Connection extends Component {
      *
      * @return Client
      */
-    public function getHandler() {
+    public function getHandler()
+    {
         if (static::$_handler === null) {
             $requestConfig = array_merge([
                 'class' => 'yii\httpclient\Request',
@@ -273,7 +283,8 @@ class Connection extends Component {
      *
      * @return Response|false
      */
-    protected function request($method, $url, $data = [], $headers = []) {
+    protected function request($method, $url, $data = [], $headers = [])
+    {
         $method = strtoupper($method);
 
         $profile = $method . ' ' . $url . '#' . (is_array($data) ? http_build_query($data) : $data);

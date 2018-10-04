@@ -43,7 +43,11 @@ class SimpleConditionBuilder extends \yii\db\conditions\SimpleConditionBuilder
             return [$column => [$this->filterControls[$operator] => null]];
         }
         if ($value instanceof ExpressionInterface) {
-            return [$column => [$this->filterControls[$operator] => $this->queryBuilder->buildExpression($value, $params)]];
+            return [
+                $column => [
+                    $this->filterControls[$operator] => $this->queryBuilder->buildExpression($value, $params)
+                ]
+            ];
         }
 
         $phName = $this->queryBuilder->bindParam($value, $params);

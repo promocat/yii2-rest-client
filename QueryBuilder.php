@@ -2,6 +2,13 @@
 
 namespace promocat\rest;
 
+use promocat\rest\conditions\BetweenConditionBuilder;
+use promocat\rest\conditions\ConjunctionConditionBuilder;
+use promocat\rest\conditions\HashConditionBuilder;
+use promocat\rest\conditions\InConditionBuilder;
+use promocat\rest\conditions\LikeConditionBuilder;
+use promocat\rest\conditions\NotConditionBuilder;
+use promocat\rest\conditions\SimpleConditionBuilder;
 use yii\db\Expression;
 use yii\base\NotSupportedException;
 use yii\helpers\ArrayHelper;
@@ -67,7 +74,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
         $query = $this->prepareQuery($query);
 
         $uri = $this->buildUri($query);
-
         $headers = $this->buildAuth($query);
 
         $clauses = [
@@ -78,6 +84,12 @@ class QueryBuilder extends \yii\db\QueryBuilder
         ];
         $clauses = array_merge($clauses, $this->buildLimit($query->limit, $query->offset));
 
+        foreach ($clauses['filter'] as &$qp) {
+            if (isset($params[$qp])) {
+                $qp = $params[$qp];
+            }
+        }
+
         return [
             'modelClass' => ArrayHelper::getValue($query, 'modelClass', ''),
             'uri' => $uri,
@@ -85,17 +97,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
             'queryParams' => array_filter($clauses),
             'action' => $query->action
         ];
-    }
-
-    public function buildUri($query)
-    {
-        if (!is_string($query->from)) {
-            return '';
-        }
-        $uri = trim($query->from);
-        if ($query->action) {
-            return $uri;
-        }
     }
 
     public function prepareQuery($query)
@@ -124,11 +125,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
     {
         $headers = [];
         $auth = $this->db->getAuth();
-        if (isset($auth['headerToken'])) {
-            $headers['Authorization'] = 'token ' . $auth['headerToken'];
-        }
-        if (isset($auth['headerBearer'])) {
-            $headers['Authorization'] = 'Bearer ' . $auth['headerBearer'];
+        if (!empty($auth)) {
+            $headers['Authorization'] = $auth;
         }
         return $headers;
     }
@@ -146,18 +144,19 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
-     * @param string $tables
-     * @param array $params the binding parameters to be populated
+     * @param $query
      *
-     * @return string the model name
+     * @return string
      */
-    public function buildFrom($tables, &$params)
+    public function buildUri($query)
     {
-        if (!is_string($tables)) {
+        if (!is_string($query->from)) {
             return '';
         }
-
-        return trim($tables);
+        $uri = trim($query->from);
+        if ($query->action) {
+            return $uri;
+        }
     }
 
     /**
@@ -214,6 +213,44 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
+     * {@inheritdoc}
+     *
+     * @return array
+     */
+    public function buildCondition($condition, &$params)
+    {
+        if ($condition instanceof Expression || empty($condition) || !is_array($condition)) {
+            return [];
+        }
+        $condition = $this->createConditionFromArray($condition);
+        /* @var $condition \yii\db\conditions\SimpleCondition */
+        return $this->buildExpression($condition, $params);
+    }
+
+    /**
+     * @return array
+     */
+    protected function defaultExpressionBuilders()
+    {
+        return [
+            'yii\db\Query' => 'yii\db\QueryExpressionBuilder',
+            'yii\db\PdoValue' => 'yii\db\PdoValueBuilder',
+            'yii\db\Expression' => 'yii\db\ExpressionBuilder',
+            'yii\db\conditions\ConjunctionCondition' => ConjunctionConditionBuilder::class,
+            'yii\db\conditions\NotCondition' => NotConditionBuilder::class,
+            'yii\db\conditions\AndCondition' => ConjunctionConditionBuilder::class,
+            'yii\db\conditions\OrCondition' => ConjunctionConditionBuilder::class,
+            'yii\db\conditions\BetweenCondition' => BetweenConditionBuilder::class,
+            'yii\db\conditions\InCondition' => InConditionBuilder::class,
+            'yii\db\conditions\LikeCondition' => LikeConditionBuilder::class,
+//            'yii\db\conditions\ExistsCondition' => 'yii\db\conditions\ExistsConditionBuilder',
+            'yii\db\conditions\SimpleCondition' => SimpleConditionBuilder::class,
+            'yii\db\conditions\HashCondition' => HashConditionBuilder::class,
+//            'yii\db\conditions\BetweenColumnsCondition' => 'yii\db\conditions\BetweenColumnsConditionBuilder'
+        ];
+    }
+
+    /**
      * @inheritdoc
      */
     public function buildOrderBy($columns)
@@ -252,44 +289,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
         }
 
         return $clauses;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return array
-     */
-    public function buildCondition($condition, &$params)
-    {
-        if ($condition instanceof Expression || empty($condition) || !is_array($condition)) {
-            return [];
-        }
-        $condition = $this->createConditionFromArray($condition);
-        /* @var $condition \yii\db\conditions\SimpleCondition */
-        return $this->buildExpression($condition, $params);
-    }
-
-    /**
-     * @return array
-     */
-    protected function defaultExpressionBuilders()
-    {
-        return [
-            'yii\db\Query' => 'yii\db\QueryExpressionBuilder',
-            'yii\db\PdoValue' => 'yii\db\PdoValueBuilder',
-            'yii\db\Expression' => 'yii\db\ExpressionBuilder',
-            'yii\db\conditions\ConjunctionCondition' => 'yii\db\conditions\ConjunctionConditionBuilder',
-            'yii\db\conditions\NotCondition' => 'yii\db\conditions\NotConditionBuilder',
-            'yii\db\conditions\AndCondition' => 'yii\db\conditions\ConjunctionConditionBuilder',
-            'yii\db\conditions\OrCondition' => 'yii\db\conditions\ConjunctionConditionBuilder',
-            'yii\db\conditions\BetweenCondition' => 'yii\db\conditions\BetweenConditionBuilder',
-            'yii\db\conditions\InCondition' => 'yii\db\conditions\InConditionBuilder',
-            'yii\db\conditions\LikeCondition' => 'yii\db\conditions\LikeConditionBuilder',
-            'yii\db\conditions\ExistsCondition' => 'yii\db\conditions\ExistsConditionBuilder',
-            'yii\db\conditions\SimpleCondition' => 'yii\db\conditions\SimpleConditionBuilder',
-            'yii\db\conditions\HashCondition' => 'yii\db\conditions\HashConditionBuilder',
-            'yii\db\conditions\BetweenColumnsCondition' => 'yii\db\conditions\BetweenColumnsConditionBuilder'
-        ];
     }
 
 //    /**

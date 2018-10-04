@@ -14,7 +14,8 @@ use Yii;
 /**
  * Class ActiveRecord
  */
-class ActiveRecord extends BaseActiveRecord {
+class ActiveRecord extends BaseActiveRecord
+{
 
     /**
      * @var array records that are related and where the data can be fetched by using join/joinWith
@@ -27,7 +28,8 @@ class ActiveRecord extends BaseActiveRecord {
      * @param array $attributes the dynamic attributes (name-value pairs, or names) being defined
      * @param array $config the configuration array to be applied to this object.
      */
-    public function __construct(array $attributes = [], $config = []) {
+    public function __construct(array $attributes = [], $config = [])
+    {
         $setOld = true;
         $keys = $this->primaryKey();
         foreach ($keys as $key) {
@@ -51,8 +53,11 @@ class ActiveRecord extends BaseActiveRecord {
 
     /**
      * @inheritdoc
+     * @throws InvalidConfigException
      */
-    public static function populateRecord($record, $row) {
+    public static function populateRecord($record, $row)
+    {
+        /* @var $record static */
         parent::populateRecord($record, $row);
         $relatedRecords = $record->relatedRecords();
         foreach ($relatedRecords as $name) {
@@ -73,19 +78,34 @@ class ActiveRecord extends BaseActiveRecord {
 
     /**
      * @inheritdoc
+     * Defaults to ['id'].
      */
-    public static function instantiate($row) {
+    public static function primaryKey()
+    {
+        return ['id'];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function instantiate($row)
+    {
         return new static($row);
     }
 
-    public function relatedRecords() {
+    /**
+     * @return array
+     */
+    public function relatedRecords()
+    {
         return $this->_relatedRecords;
     }
 
     /**
      * @inheritdoc
      */
-    public function setAttribute($name, $value) {
+    public function setAttribute($name, $value)
+    {
         try {
             parent::setAttribute($name, $value);
         } catch (InvalidArgumentException $e) {
@@ -94,22 +114,12 @@ class ActiveRecord extends BaseActiveRecord {
     }
 
     /**
-     * @return null|Connection
-     * @throws InvalidConfigException
-     */
-    public static function getDb() {
-        $connection = Yii::$app->get(Connection::getDriverName());
-
-        /* @var $connection Connection */
-        return $connection;
-    }
-
-    /**
      * @inheritdoc
      *
      * @return ActiveQuery
      */
-    public static function find() {
+    public static function find()
+    {
         return static::createQuery();
     }
 
@@ -117,10 +127,24 @@ class ActiveRecord extends BaseActiveRecord {
      * @return ActiveQuery
      * @throws InvalidConfigException
      */
-    private static function createQuery() {
+    private static function createQuery()
+    {
         $class = static::getDb()->activeQueryClass;
         return new $class(get_called_class());
     }
+
+    /**
+     * @return null|Connection
+     * @throws InvalidConfigException
+     */
+    public static function getDb()
+    {
+        $connection = Yii::$app->get(Connection::getDriverName());
+
+        /* @var $connection Connection */
+        return $connection;
+    }
+
 
     /**
      * Declares the name of the url path associated with this AR class.
@@ -131,27 +155,16 @@ class ActiveRecord extends BaseActiveRecord {
      *
      * @return string the url path
      */
-    public static function modelName() {
+    public static function modelName()
+    {
         return Inflector::pluralize(Inflector::camel2id(StringHelper::basename(get_called_class()), '-'));
-    }
-
-    /**
-     * Returns the primary key **name(s)** for this AR class. Defaults to ['id'].
-     *
-     * Note that an array should be returned even when the record only has a single primary key.
-     *
-     * For the primary key **value** see [[getPrimaryKey()]] instead.
-     *
-     * @return string[] the primary key name(s) for this AR class.
-     */
-    public static function primaryKey() {
-        return ['id'];
     }
 
     /**
      * @inheritdoc
      */
-    public function insert($runValidation = true, $attributes = null) {
+    public function insert($runValidation = true, $attributes = null)
+    {
         if ($runValidation && !$this->validate($attributes)) {
             Yii::info('Model not inserted due to validation error.', __METHOD__);
 
@@ -169,7 +182,8 @@ class ActiveRecord extends BaseActiveRecord {
      *
      * @return boolean whether the record is inserted successfully.
      */
-    protected function insertInternal($attributes) {
+    protected function insertInternal($attributes)
+    {
         if (!$this->beforeSave(true)) {
             return false;
         }
@@ -192,7 +206,8 @@ class ActiveRecord extends BaseActiveRecord {
     /**
      * @inheritdoc
      */
-    public function update($runValidation = true, $attributeNames = null) {
+    public function update($runValidation = true, $attributeNames = null)
+    {
         if ($runValidation && !$this->validate($attributeNames)) {
             Yii::info('Model not inserted due to validation error.', __METHOD__);
 
@@ -205,7 +220,8 @@ class ActiveRecord extends BaseActiveRecord {
     /**
      * @inheritdoc
      */
-    protected function updateInternal($attributes = null) {
+    protected function updateInternal($attributes = null)
+    {
         if (!$this->beforeSave(false)) {
             return false;
         }
@@ -231,7 +247,8 @@ class ActiveRecord extends BaseActiveRecord {
     /**
      * @inheritdoc
      */
-    public function delete() {
+    public function delete()
+    {
         $result = false;
         if ($this->beforeDelete()) {
             $command = static::createQuery()->createCommand(null, 'delete');
@@ -247,7 +264,8 @@ class ActiveRecord extends BaseActiveRecord {
     /**
      * @inheritdoc
      */
-    public function unlinkAll($name, $delete = false) {
+    public function unlinkAll($name, $delete = false)
+    {
         throw new NotSupportedException('unlinkAll() is not supported by RestClient, use unlink() instead.');
     }
 }
