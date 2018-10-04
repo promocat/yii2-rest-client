@@ -9,7 +9,8 @@ use yii\helpers\ArrayHelper;
 /**
  * Class QueryBuilder builds an HiActiveResource query based on the specification given as a [[Query]] object.
  */
-class QueryBuilder extends \yii\db\QueryBuilder {
+class QueryBuilder extends \yii\db\QueryBuilder
+{
 
     /**
      * @var Connection the database connection.
@@ -43,7 +44,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      * @param mixed $connection the database connection.
      * @param array $config name-value pairs that will be used to initialize the object properties
      */
-    public function __construct($connection, array $config = []) {
+    public function __construct($connection, array $config = [])
+    {
         parent::__construct($connection, $config);
     }
 
@@ -56,7 +58,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      * @return array
      * @throws NotSupportedException
      */
-    public function build($query, $params = []) {
+    public function build($query, $params = [])
+    {
         $query = $query->prepare($this);
 
         $params = empty($params) ? $query->params : array_merge($params, $query->params);
@@ -84,16 +87,19 @@ class QueryBuilder extends \yii\db\QueryBuilder {
         ];
     }
 
-    public function buildUri($query) {
+    public function buildUri($query)
+    {
         if (!is_string($query->from)) {
             return '';
         }
         $uri = trim($query->from);
-        if ($query->action)
+        if ($query->action) {
             return $uri;
+        }
     }
 
-    public function prepareQuery($query) {
+    public function prepareQuery($query)
+    {
         if (empty($query->where)) {
             $query->where = [];
         }
@@ -111,8 +117,11 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      * This function is for you to provide your authentication.
      *
      * @param Query $query
+     *
+     * @return array
      */
-    public function buildAuth($query) {
+    public function buildAuth($query)
+    {
         $headers = [];
         $auth = $this->db->getAuth();
         if (isset($auth['headerToken'])) {
@@ -127,7 +136,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
     /**
      * @inheritdoc
      */
-    public function buildSelect($columns, &$params, $distinct = false, $selectOptions = null) {
+    public function buildSelect($columns, &$params, $distinct = false, $selectOptions = null)
+    {
         if (!empty($columns) && is_array($columns)) {
             return implode($this->separator, $columns);
         }
@@ -141,7 +151,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      *
      * @return string the model name
      */
-    public function buildFrom($tables, &$params) {
+    public function buildFrom($tables, &$params)
+    {
         if (!is_string($tables)) {
             return '';
         }
@@ -152,7 +163,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
     /**
      * @inheritdoc
      */
-    public function buildJoin($joins, &$params) {
+    public function buildJoin($joins, &$params)
+    {
         if (empty($joins)) {
             return '';
         }
@@ -178,12 +190,14 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      *
      * @return array the WHERE clause built from [[Query::$where]].
      */
-    public function buildWhere($condition, &$params) {
+    public function buildWhere($condition, &$params)
+    {
         $where = $this->buildCondition($condition, $params);
         return $where;
     }
 
-    public function buildLink(&$query, &$params) {
+    public function buildLink(&$query, &$params)
+    {
         if (empty($query->where)) {
             $query->where = [];
         }
@@ -202,7 +216,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
     /**
      * @inheritdoc
      */
-    public function buildOrderBy($columns) {
+    public function buildOrderBy($columns)
+    {
         if (empty($columns)) {
             return '';
         }
@@ -225,7 +240,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      *
      * @return array the LIMIT and OFFSET clauses
      */
-    public function buildLimit($limit, $offset) {
+    public function buildLimit($limit, $offset)
+    {
         $clauses = [];
         if ($this->hasLimit($limit)) {
             $clauses['per-page'] = (string)$limit;
@@ -239,40 +255,79 @@ class QueryBuilder extends \yii\db\QueryBuilder {
     }
 
     /**
-     * @param $condition
-     * @param $params
+     * {@inheritdoc}
      *
-     * @return array|string
-     * @throws NotSupportedException
+     * @return array
      */
-    public function buildCondition($condition, &$params) {
+    public function buildCondition($condition, &$params)
+    {
         if ($condition instanceof Expression || empty($condition) || !is_array($condition)) {
             return [];
         }
-
-        if (isset($condition[0])) { // operator format: operator, operand 1, operand 2, ...
-            var_dump($condition);
-            /*
-            $operator = strtoupper($condition[0]);
-            if (!isset($this->conditionBuilders[$operator])) {
-                throw new NotSupportedException($operator.' is not supported.');
-            }
-            $method = $this->conditionBuilders[$operator];
-            array_shift($condition);
-
-            return $this->$method($operator, $condition, $params);
-            /*/
-            return [];
-            //*/
-        } else { // hash format: 'column1' => 'value1', 'column2' => 'value2', ...
-            return $this->buildHashCondition($condition, $params);
-        }
+        $condition = $this->createConditionFromArray($condition);
+        /* @var $condition \yii\db\conditions\SimpleCondition */
+        return $this->buildExpression($condition, $params);
     }
+
+    /**
+     * @return array
+     */
+    protected function defaultExpressionBuilders()
+    {
+        return [
+            'yii\db\Query' => 'yii\db\QueryExpressionBuilder',
+            'yii\db\PdoValue' => 'yii\db\PdoValueBuilder',
+            'yii\db\Expression' => 'yii\db\ExpressionBuilder',
+            'yii\db\conditions\ConjunctionCondition' => 'yii\db\conditions\ConjunctionConditionBuilder',
+            'yii\db\conditions\NotCondition' => 'yii\db\conditions\NotConditionBuilder',
+            'yii\db\conditions\AndCondition' => 'yii\db\conditions\ConjunctionConditionBuilder',
+            'yii\db\conditions\OrCondition' => 'yii\db\conditions\ConjunctionConditionBuilder',
+            'yii\db\conditions\BetweenCondition' => 'yii\db\conditions\BetweenConditionBuilder',
+            'yii\db\conditions\InCondition' => 'yii\db\conditions\InConditionBuilder',
+            'yii\db\conditions\LikeCondition' => 'yii\db\conditions\LikeConditionBuilder',
+            'yii\db\conditions\ExistsCondition' => 'yii\db\conditions\ExistsConditionBuilder',
+            'yii\db\conditions\SimpleCondition' => 'yii\db\conditions\SimpleConditionBuilder',
+            'yii\db\conditions\HashCondition' => 'yii\db\conditions\HashConditionBuilder',
+            'yii\db\conditions\BetweenColumnsCondition' => 'yii\db\conditions\BetweenColumnsConditionBuilder'
+        ];
+    }
+
+//    /**
+//     * @param $condition
+//     * @param $params
+//     *
+//     * @return array|string
+//     * @throws NotSupportedException
+//     */
+//    public function buildCondition($condition, &$params) {
+//        if ($condition instanceof Expression || empty($condition) || !is_array($condition)) {
+//            return [];
+//        }
+//
+//        if (isset($condition[0])) { // operator format: operator, operand 1, operand 2, ...
+//            var_dump($condition);
+//            /*
+//            $operator = strtoupper($condition[0]);
+//            if (!isset($this->conditionBuilders[$operator])) {
+//                throw new NotSupportedException($operator.' is not supported.');
+//            }
+//            $method = $this->conditionBuilders[$operator];
+//            array_shift($condition);
+//
+//            return $this->$method($operator, $condition, $params);
+//            /*/
+//            return [];
+//            //*/
+//        } else { // hash format: 'column1' => 'value1', 'column2' => 'value2', ...
+//            return $this->buildHashCondition($condition, $params);
+//        }
+//    }
 
     /**
      * @inheritdoc
      */
-    public function buildHashCondition($condition, &$params) {
+    public function buildHashCondition($condition, &$params)
+    {
         $parts = [];
         foreach ($condition as $attribute => $value) {
             if (is_array($value)) { // IN condition
