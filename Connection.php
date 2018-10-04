@@ -236,30 +236,6 @@ class Connection extends Component {
     }
 
     /**
-     * Handles the request with handler.
-     * Returns array or raw response content, if $raw is true.
-     *
-     * @param string $method POST, GET, etc
-     * @param string|array $url the URL for request, not including proto and site
-     * @param array $data the request data
-     *
-     * @return Response|false
-     */
-    protected function request($method, $url, $data = [], $headers = []) {
-        $method = strtoupper($method);
-        $profile = $method . ' ' . $url . '#' . (is_array($data) ? http_build_query($data) : $data);
-        Yii::beginProfile($profile, __METHOD__);
-        $this->_response = call_user_func([$this->handler, $method], $url, $data, $headers)->send();
-        Yii::endProfile($profile, __METHOD__);
-
-        if (!$this->_response->isOk) {
-            return false;
-        }
-
-        return $this->_response->data;
-    }
-
-    /**
      * Returns the request handler (Guzzle client for the moment).
      * Creates and setups handler if not set.
      *
@@ -284,4 +260,33 @@ class Connection extends Component {
 
         return static::$_handler;
     }
+
+    /**
+     * Handles the request with handler.
+     * Returns array or raw response content, if $raw is true.
+     *
+     * @param string $method POST, GET, etc
+     * @param string|array $url the URL for request, not including proto and site
+     * @param array $data the request data
+     *
+     * @param array $headers
+     *
+     * @return Response|false
+     */
+    protected function request($method, $url, $data = [], $headers = []) {
+        $method = strtoupper($method);
+
+        $profile = $method . ' ' . $url . '#' . (is_array($data) ? http_build_query($data) : $data);
+
+        Yii::beginProfile($profile, __METHOD__);
+        $this->_response = call_user_func([$this->handler, $method], $url, $data, $headers)->send();
+        Yii::endProfile($profile, __METHOD__);
+
+        if (!$this->_response->isOk) {
+            return false;
+        }
+
+        return $this->_response->data;
+    }
+
 }

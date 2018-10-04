@@ -60,10 +60,9 @@ class Command extends Component {
             $pks = $class::primaryKey();
             if (count($pks) === 1 && isset($this->queryParams['filter'])) {
                 $primaryKey = current($pks);
-                if (isset($this->queryParams['filter'][$primaryKey])) {
-                    $this->uri .= '/' . $this->queryParams['filter'][$primaryKey];
-                    unset($this->queryParams['filter'][$primaryKey]);
-                    $this->queryParams = array_filter($this->queryParams);
+                $primaryKeyValue = ArrayHelper::remove($this->queryParams['filter'], $primaryKey);
+                if ($primaryKeyValue) {
+                    $this->uri .= '/' . $primaryKeyValue;
                 }
             }
         }
