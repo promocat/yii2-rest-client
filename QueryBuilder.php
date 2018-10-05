@@ -16,7 +16,8 @@ use yii\helpers\ArrayHelper;
 /**
  * Class QueryBuilder builds an HiActiveResource query based on the specification given as a [[Query]] object.
  */
-class QueryBuilder extends \yii\db\QueryBuilder {
+class QueryBuilder extends \yii\db\QueryBuilder
+{
 
     /**
      * @var Connection the database connection.
@@ -50,7 +51,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      * @param mixed $connection the database connection.
      * @param array $config name-value pairs that will be used to initialize the object properties
      */
-    public function __construct($connection, array $config = []) {
+    public function __construct($connection, array $config = [])
+    {
         parent::__construct($connection, $config);
     }
 
@@ -63,7 +65,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      * @return array
      * @throws NotSupportedException
      */
-    public function build($query, $params = []) {
+    public function build($query, $params = [])
+    {
         $query = $query->prepare($this);
 
         $params = empty($params) ? $query->params : array_merge($params, $query->params);
@@ -83,7 +86,7 @@ class QueryBuilder extends \yii\db\QueryBuilder {
 
         foreach ($clauses['filter'] as &$qp) {
             if (is_array($qp)) {
-                foreach($qp as &$value) {
+                foreach ($qp as &$value) {
                     if (isset($params[$value])) {
                         $value = $params[$value];
                     }
@@ -104,7 +107,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
         ];
     }
 
-    public function prepareQuery($query) {
+    public function prepareQuery($query)
+    {
         if (empty($query->where)) {
             $query->where = [];
         }
@@ -125,7 +129,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      *
      * @return array
      */
-    public function buildAuth($query) {
+    public function buildAuth($query)
+    {
         $headers = [];
         $auth = $this->db->getAuth();
         if (!empty($auth)) {
@@ -137,7 +142,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
     /**
      * @inheritdoc
      */
-    public function buildSelect($columns, &$params, $distinct = false, $selectOptions = null) {
+    public function buildSelect($columns, &$params, $distinct = false, $selectOptions = null)
+    {
         if (!empty($columns) && is_array($columns)) {
             return implode($this->separator, $columns);
         }
@@ -150,7 +156,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      *
      * @return string
      */
-    public function buildUri($query) {
+    public function buildUri($query)
+    {
         if (!is_string($query->from)) {
             return '';
         }
@@ -163,7 +170,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
     /**
      * @inheritdoc
      */
-    public function buildJoin($joins, &$params) {
+    public function buildJoin($joins, &$params)
+    {
         if (empty($joins)) {
             return '';
         }
@@ -189,12 +197,14 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      *
      * @return array the WHERE clause built from [[Query::$where]].
      */
-    public function buildWhere($condition, &$params) {
+    public function buildWhere($condition, &$params)
+    {
         $where = $this->buildCondition($condition, $params);
         return $where;
     }
 
-    public function buildLink(&$query, &$params) {
+    public function buildLink(&$query, &$params)
+    {
         if (empty($query->where)) {
             $query->where = [];
         }
@@ -215,7 +225,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      *
      * @return array
      */
-    public function buildCondition($condition, &$params) {
+    public function buildCondition($condition, &$params)
+    {
         if ($condition instanceof Expression || empty($condition) || !is_array($condition)) {
             return [];
         }
@@ -227,7 +238,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
     /**
      * @return array
      */
-    protected function defaultExpressionBuilders() {
+    protected function defaultExpressionBuilders()
+    {
         return [
             'yii\db\Query' => 'yii\db\QueryExpressionBuilder',
             'yii\db\PdoValue' => 'yii\db\PdoValueBuilder',
@@ -249,7 +261,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
     /**
      * @inheritdoc
      */
-    public function buildOrderBy($columns) {
+    public function buildOrderBy($columns)
+    {
         if (empty($columns)) {
             return '';
         }
@@ -272,7 +285,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
      *
      * @return array the LIMIT and OFFSET clauses
      */
-    public function buildLimit($limit, $offset) {
+    public function buildLimit($limit, $offset)
+    {
         $clauses = [];
         if ($this->hasLimit($limit)) {
             $clauses['per-page'] = (string)$limit;
@@ -319,7 +333,8 @@ class QueryBuilder extends \yii\db\QueryBuilder {
     /**
      * @inheritdoc
      */
-    public function buildHashCondition($condition, &$params) {
+    public function buildHashCondition($condition, &$params)
+    {
         $parts = [];
         foreach ($condition as $attribute => $value) {
             if (is_array($value)) { // IN condition
