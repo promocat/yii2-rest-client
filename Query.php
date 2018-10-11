@@ -158,15 +158,10 @@ class Query extends \yii\db\Query implements QueryInterface
             return [];
         }
 
-        if ($this->indexBy === null) {
-            return $this->createCommand($db)->queryColumn();
-        }
         $valueColumn = false;
-        if (is_string($this->indexBy) && is_array($this->select) && count($this->select) === 1) {
-            $valueColumn = reset($this->select);
-            if (strpos($this->indexBy, '.') === false && count($tables = $this->getTablesUsedInFrom()) > 0) {
-                $this->select[] = key($tables) . '.' . $this->indexBy;
-            } else {
+        if ($this->indexBy === null) {
+            if (is_string($this->indexBy) && is_array($this->select) && count($this->select) === 1) {
+                $valueColumn = reset($this->select);
                 $this->select[] = $this->indexBy;
             }
         }
@@ -180,7 +175,10 @@ class Query extends \yii\db\Query implements QueryInterface
                 } else {
                     $value = $row[$valueColumn];
                 }
-                if ($this->indexBy instanceof \Closure) {
+
+                if ($this->indexBy === null) {
+                    $results[] = $value;
+                } elseif ($this->indexBy instanceof \Closure) {
                     $results[call_user_func($this->indexBy, $row)] = $value;
                 } else {
                     $results[$row[$this->indexBy]] = $value;

@@ -66,7 +66,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
      * @return array
      * @throws NotSupportedException
      */
-    public function build($query, $params = [])
+    public function build(Query $query, $params = [])
     {
         $query = $query->prepare($this);
 
