@@ -11,6 +11,7 @@ use promocat\rest\conditions\NotConditionBuilder;
 use promocat\rest\conditions\SimpleConditionBuilder;
 use yii\db\Expression;
 use yii\base\NotSupportedException;
+use yii\db\QueryInterface;
 use yii\helpers\ArrayHelper;
 
 /**
@@ -82,7 +83,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
             'filter' => $this->buildWhere($query->where, $params),
             'sort' => $this->buildOrderBy($query->orderBy)
         ];
-        $clauses = array_merge($clauses, $this->buildLimit($query->limit, $query->offset));
+
+        $clauses = array_merge($clauses, $this->buildLimit($query->limit, $query->offset, $query));
 
         foreach ($clauses['filter'] as &$qp) {
             if (is_array($qp)) {
@@ -119,6 +121,14 @@ class QueryBuilder extends \yii\db\QueryBuilder
                 }
             }
         }
+
+        /*
+         * When recursing through pages, set the page size to max. to limit the number of API calls.
+         */
+        if (!$this->hasLimit($query->limit) && $query->recurse) {
+            $query->limit = $this->db->maxPerPage;
+        }
+
         return $query;
     }
 
@@ -203,23 +213,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
         return $where;
     }
 
-    public function buildLink(&$query, &$params)
-    {
-        if (empty($query->where)) {
-            $query->where = [];
-        }
-        if (isset($query->primaryModel)) {
-            foreach ($query->link as $filterAttribute => $valueAttribute) {
-                if (isset($params[$valueAttribute])) {
-                    $query->where([$filterAttribute => $params[$valueAttribute]]);
-                } elseif (isset($query->primaryModel->{$valueAttribute})) {
-                    $query->where([$filterAttribute => $query->primaryModel->{$valueAttribute}]);
-                }
-            }
-        }
-        return $query->where;
-    }
-
     /**
      * {@inheritdoc}
      *
@@ -280,6 +273,22 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
+     * @param Query $query
+     */
+    public function prepareLimit(Query $query)
+    {
+
+        $limit = $query->limit;
+        /*
+         * When recursing through pages, set the page size to max. to limit the number of API calls.
+         */
+        if (!$this->hasLimit($query->limit) && $query->recurse) {
+            $limit = $this->db->maxPerPage;
+        }
+        return $limit;
+    }
+
+    /**
      * @param integer $limit
      * @param integer $offset
      *
@@ -298,37 +307,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
 
         return $clauses;
     }
-
-//    /**
-//     * @param $condition
-//     * @param $params
-//     *
-//     * @return array|string
-//     * @throws NotSupportedException
-//     */
-//    public function buildCondition($condition, &$params) {
-//        if ($condition instanceof Expression || empty($condition) || !is_array($condition)) {
-//            return [];
-//        }
-//
-//        if (isset($condition[0])) { // operator format: operator, operand 1, operand 2, ...
-//            var_dump($condition);
-//            /*
-//            $operator = strtoupper($condition[0]);
-//            if (!isset($this->conditionBuilders[$operator])) {
-//                throw new NotSupportedException($operator.' is not supported.');
-//            }
-//            $method = $this->conditionBuilders[$operator];
-//            array_shift($condition);
-//
-//            return $this->$method($operator, $condition, $params);
-//            /*/
-//            return [];
-//            //*/
-//        } else { // hash format: 'column1' => 'value1', 'column2' => 'value2', ...
-//            return $this->buildHashCondition($condition, $params);
-//        }
-//    }
 
     /**
      * @inheritdoc

@@ -10,7 +10,6 @@ use Yii;
  */
 class Query extends \yii\db\Query implements QueryInterface
 {
-
     /**
      * @var string action that this query performs
      */
@@ -26,6 +25,11 @@ class Query extends \yii\db\Query implements QueryInterface
      * @var ActiveRecord
      */
     public $searchModel;
+
+    /**
+     * @var bool Recurse through all the result pages
+     */
+    public $recurse = true;
 
     /**
      * Prepares for building query.
@@ -59,7 +63,8 @@ class Query extends \yii\db\Query implements QueryInterface
         if ($db === null) {
             $db = Yii::$app->get(Connection::getDriverName());
         }
-        $commandConfig = $db->getQueryBuilder()->build($this->addAction($action));
+        $this->addAction($action);
+        $commandConfig = $db->getQueryBuilder()->build($this);
 
         return $db->createCommand($commandConfig);
     }
@@ -131,6 +136,14 @@ class Query extends \yii\db\Query implements QueryInterface
     }
 
     /**
+     * @param bool $recurse
+     */
+    public function recurse(bool $recurse)
+    {
+        $this->recurse = $recurse;
+    }
+
+    /**
      * Executes the query and returns the first column of the result.
      * Order of indexBy() and select() is now irrelevant.
      *
@@ -139,7 +152,7 @@ class Query extends \yii\db\Query implements QueryInterface
      *
      * @return array the first column of the query result. An empty array is returned if the query results in nothing.
      */
-    public function column($recurse = false, $db = null)
+    public function column($db = null)
     {
         if ($this->emulateExecution) {
             return [];
@@ -157,7 +170,7 @@ class Query extends \yii\db\Query implements QueryInterface
                 $this->select[] = $this->indexBy;
             }
         }
-        $rows = $this->all($recurse, $db);
+        $rows = $this->all($db);
 
         $results = [];
         if ($rows !== false) {
@@ -196,22 +209,21 @@ class Query extends \yii\db\Query implements QueryInterface
      *
      * @return array
      */
-    public function all($recurse = false, $db = null)
+    public function all($db = null)
     {
-        if ($recurse) {
-            if ($this->emulateExecution) {
-                return [];
-            }
-            $rows = $this->recurseAll($db);
-            return $this->populate($rows);
+        if ($this->emulateExecution) {
+            return [];
         }
-        return parent::all($db);
+        if (!$this->recurse) {
+            return parent::all($db);
+        }
+        $rows = $this->recurseAll($db);
+        return $this->populate($rows);
     }
 
-    private function recurseAll($db, &$rows = null)
+    protected function recurseAll($db, &$rows = null)
     {
         $command = $this->createCommand($db);
-
         if ($rows === null) {
             $rows = $command->queryAll();
         } else {
@@ -224,14 +236,12 @@ class Query extends \yii\db\Query implements QueryInterface
         if (($response = $command->db->getResponse()) !== null) {
             $pageCount = (int)$response->headers->get('x-pagination-page-count');
             $currentPage = (int)$response->headers->get('x-pagination-current-page');
-
             if ($currentPage < $pageCount) { // We have not reached the end
                 $perPage = (int)$response->headers->get('x-pagination-per-page');
                 $this->offset($currentPage * $perPage);
                 // Make another request!
                 $this->recurseAll($db, $rows);
             }
-
         }
         return $rows;
     }

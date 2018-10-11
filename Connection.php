@@ -34,7 +34,6 @@ class Connection extends Component
      * @event Event an event that is triggered after a DB connection is established
      */
     const EVENT_AFTER_OPEN = 'afterOpen';
-
     /**
      * @var Client
      */
@@ -44,19 +43,31 @@ class Connection extends Component
      * @var string base request URL.
      */
     public $baseUrl = '';
+
     /**
      * @var array request object configuration.
      */
     public $requestConfig = [];
+
     /**
      * @var array response config configuration.
      */
     public $responseConfig = [];
+
     /**
      * @var array response config configuration.
      */
     public $activeQueryClass = 'promocat\rest\ActiveQuery';
 
+    /**
+     * @var int Currently not used
+     */
+    public $defaultPerPage = 20;
+
+    /**
+     * @var int The maximum results requested per page when recursing
+     */
+    public $maxPerPage = 50;
 
     /**
      * @var string|\Closure authorization config
