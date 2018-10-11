@@ -159,7 +159,7 @@ class Query extends \yii\db\Query implements QueryInterface
         }
 
         $valueColumn = false;
-        if ($this->indexBy === null) {
+        if ($this->indexBy !== null) {
             if (is_string($this->indexBy) && is_array($this->select) && count($this->select) === 1) {
                 $valueColumn = reset($this->select);
                 $this->select[] = $this->indexBy;
