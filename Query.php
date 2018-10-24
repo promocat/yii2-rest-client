@@ -2,8 +2,8 @@
 
 namespace promocat\rest;
 
-use yii\db\QueryInterface;
 use Yii;
+use yii\db\QueryInterface;
 
 /**
  * Class Query
@@ -30,12 +30,6 @@ class Query extends \yii\db\Query implements QueryInterface
      * @var bool Recurse through all the result pages
      */
     public $recurse = true;
-
-    /**
-     * @var int|ExpressionInterface maximum number of records to be returned. May be an instance of [[ExpressionInterface]].
-     * If not set or less than 0, it means no limit.
-     */
-    public $limit;
 
     /**
      * Prepares for building query.
@@ -233,32 +227,41 @@ class Query extends \yii\db\Query implements QueryInterface
         if (!$this->recurse) {
             return parent::all($db);
         }
-        $rows = $this->recurseAll($db);
-        return $this->populate($rows);
+        return $this->recurseAll($db);
     }
 
-    protected function recurseAll($db, &$rows = null)
+    protected function recurseAll($db)
     {
-        $command = $this->createCommand($db);
-        if ($rows === null) {
-            $rows = $command->queryAll();
-        } else {
-            $rows = array_merge($rows, $command->queryAll());
-        }
-
-        /**
-         * Get the response object
-         */
-        if (($response = $command->db->getResponse()) !== null) {
-            $pageCount = (int)$response->headers->get('x-pagination-page-count');
-            $currentPage = (int)$response->headers->get('x-pagination-current-page');
-            if ($currentPage < $pageCount) { // We have not reached the end
-                $perPage = (int)$response->headers->get('x-pagination-per-page');
-                $this->offset($currentPage * $perPage);
-                // Make another request!
-                $this->recurseAll($db, $rows);
-            }
+        $rows = [];
+        foreach ($this->each() as $row) {
+            $rows[] = $row;
         }
         return $rows;
+    }
+
+    public function each($batchSize = 50, $db = null)
+    {
+        $this->limit($batchSize);
+
+        return Yii::createObject([
+            'class' => BatchQueryResult::class,
+            'query' => $this,
+            'batchSize' => $batchSize,
+            'db' => $db,
+            'each' => true,
+        ]);
+    }
+
+    public function batch($batchSize = 50, $db = null)
+    {
+        $this->limit($batchSize);
+
+        return Yii::createObject([
+            'class' => BatchQueryResult::class,
+            'query' => $this,
+            'batchSize' => $batchSize,
+            'db' => $db,
+            'each' => false,
+        ]);
     }
 }
