@@ -227,11 +227,7 @@ class Query extends \yii\db\Query implements QueryInterface
         if (!$this->recurse) {
             return parent::all($db);
         }
-        $rows = [];
-        foreach ($this->each(50, $db) as $key => $row) {
-            $rows[$key] = $row;
-        }
-        return $rows;
+        return iterator_to_array($this->each(50, $db), true);
     }
 
     public function each($batchSize = 50, $db = null)
