@@ -32,6 +32,12 @@ class Query extends \yii\db\Query implements QueryInterface
     public $recurse = true;
 
     /**
+     * @var int|ExpressionInterface maximum number of records to be returned. May be an instance of [[ExpressionInterface]].
+     * If not set or less than 0, it means no limit.
+     */
+    public $limit;
+
+    /**
      * Prepares for building query.
      * This method is called by [[QueryBuilder]] when it starts to build SQL from a query object.
      * You may override this method to do some final preparation work when converting a query into a SQL statement.
@@ -141,6 +147,18 @@ class Query extends \yii\db\Query implements QueryInterface
     public function recurse(bool $recurse)
     {
         $this->recurse = $recurse;
+    }
+
+    /**
+     * Sets the LIMIT part of the query and disables RECURSE.
+     * @param int|ExpressionInterface|null $limit the limit. Use null or negative value to disable limit.
+     * @return $this the query object itself
+     */
+    public function limit($limit)
+    {
+        $this->recurse = false;
+        $this->limit = $limit;
+        return $this;
     }
 
     /**
