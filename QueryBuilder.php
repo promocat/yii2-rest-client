@@ -9,8 +9,8 @@ use promocat\rest\conditions\InConditionBuilder;
 use promocat\rest\conditions\LikeConditionBuilder;
 use promocat\rest\conditions\NotConditionBuilder;
 use promocat\rest\conditions\SimpleConditionBuilder;
-use yii\db\Expression;
 use yii\base\NotSupportedException;
+use yii\db\Expression;
 use yii\db\QueryInterface;
 use yii\helpers\ArrayHelper;
 
@@ -120,13 +120,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
                     $query->where([$filterAttribute => $query->primaryModel->{$valueAttribute}]);
                 }
             }
-        }
-
-        /*
-         * When recursing through pages, set the page size to max. to limit the number of API calls.
-         */
-        if (!$this->hasLimit($query->limit) && $query->recurse) {
-            $query->limit = $this->db->maxPerPage;
         }
 
         return $query;
@@ -273,22 +266,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
-     * @param Query $query
-     */
-    public function prepareLimit(Query $query)
-    {
-
-        $limit = $query->limit;
-        /*
-         * When recursing through pages, set the page size to max. to limit the number of API calls.
-         */
-        if (!$this->hasLimit($query->limit) && $query->recurse) {
-            $limit = $this->db->maxPerPage;
-        }
-        return $limit;
-    }
-
-    /**
      * @param integer $limit
      * @param integer $offset
      *
@@ -298,6 +275,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
     {
         $clauses = [];
         if ($this->hasLimit($limit)) {
+            $limit = $limit > $this->db->maxPerPage ? $this->db->maxPerPage : $limit;
             $clauses['per-page'] = (string)$limit;
         }
         if ($this->hasOffset($offset)) {

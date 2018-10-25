@@ -27,11 +27,6 @@ class Query extends \yii\db\Query implements QueryInterface
     public $searchModel;
 
     /**
-     * @var bool Recurse through all the result pages
-     */
-    public $recurse = true;
-
-    /**
      * Prepares for building query.
      * This method is called by [[QueryBuilder]] when it starts to build SQL from a query object.
      * You may override this method to do some final preparation work when converting a query into a SQL statement.
@@ -136,26 +131,6 @@ class Query extends \yii\db\Query implements QueryInterface
     }
 
     /**
-     * @param bool $recurse
-     */
-    public function recurse(bool $recurse)
-    {
-        $this->recurse = $recurse;
-    }
-
-    /**
-     * Sets the LIMIT part of the query and disables RECURSE.
-     * @param int|ExpressionInterface|null $limit the limit. Use null or negative value to disable limit.
-     * @return $this the query object itself
-     */
-    public function limit($limit)
-    {
-        $this->recurse = false;
-        $this->limit = $limit;
-        return $this;
-    }
-
-    /**
      * Executes the query and returns the first column of the result.
      * Order of indexBy() and select() is now irrelevant.
      *
@@ -213,18 +188,13 @@ class Query extends \yii\db\Query implements QueryInterface
 
     /**
      * @inheritdoc
-     *
-     * @param bool $recurse Set to true, to really fetch all results spanning all pages!
-     * @param null $db
-     *
-     * @return array
      */
     public function all($db = null)
     {
         if ($this->emulateExecution) {
             return [];
         }
-        if (!$this->recurse) {
+        if ($this->limit !== null) {
             return parent::all($db);
         }
         return iterator_to_array($this->each(50, $db), true);
