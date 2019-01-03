@@ -209,7 +209,7 @@ class Query extends \yii\db\Query implements QueryInterface
         return iterator_to_array($this->each($batchSize, $db), true);
     }
 
-    public function each($batchSize = 50, $db = null)
+    public function each($batchSize = null, $db = null)
     {
         $this->limit($batchSize);
 
