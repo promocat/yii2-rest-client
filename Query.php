@@ -197,7 +197,16 @@ class Query extends \yii\db\Query implements QueryInterface
         if ($this->limit !== null) {
             return parent::all($db);
         }
-        return iterator_to_array($this->each(50, $db), true);
+
+        /*
+         * Gets the maxPerPage setting from the db config. Defaults to 50 when not set.
+         */
+        if($db === null) {
+            $db = Yii::$app->get(Connection::getDriverName());
+        }
+        $batchSize = isset($db->maxPerPage) ? $db->maxPerPage : 50;
+
+        return iterator_to_array($this->each($batchSize, $db), true);
     }
 
     public function each($batchSize = 50, $db = null)
