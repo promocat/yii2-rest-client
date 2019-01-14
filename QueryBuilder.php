@@ -11,7 +11,6 @@ use promocat\rest\conditions\NotConditionBuilder;
 use promocat\rest\conditions\SimpleConditionBuilder;
 use yii\base\NotSupportedException;
 use yii\db\Expression;
-use yii\db\QueryInterface;
 use yii\helpers\ArrayHelper;
 
 /**
@@ -178,19 +177,18 @@ class QueryBuilder extends \yii\db\QueryBuilder
         if (empty($joins)) {
             return '';
         }
-
         $expand = [];
         foreach ($joins as $i => $join) {
             if (empty($join)) {
                 continue;
             }
             if (is_array($join)) {
-                $expand[] = $join[1];
+                $joinTable = explode(' ', $join[1]);
+                $expand[] = reset($joinTable);
                 continue;
             }
             $expand[] = $join;
         }
-
         return implode($this->separator, $expand);
     }
 

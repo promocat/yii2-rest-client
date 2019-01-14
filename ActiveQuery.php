@@ -154,6 +154,9 @@ class ActiveQuery extends Query implements ActiveQueryInterface
         foreach ($this->joinWith as $with) {
             $this->joinWithRelations($model, $with);
             foreach ($with as $name => $callback) {
+                if (is_int($name)) {
+                    $callback = ArrayHelper::getValue($model->relatedRecords(), $callback, $callback);
+                }
                 $this->innerJoin(is_int($name) ? $callback : [$name => $callback]);
                 unset($with[$name]);
             }
@@ -174,6 +177,7 @@ class ActiveQuery extends Query implements ActiveQueryInterface
      */
     protected function joinWithRelations($model, $with)
     {
+        $relations = [];
         foreach ($with as $name => $callback) {
             if (is_int($name)) {
                 $name = $callback;

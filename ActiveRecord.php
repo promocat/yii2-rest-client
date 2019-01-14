@@ -2,6 +2,7 @@
 
 namespace promocat\rest;
 
+use Yii;
 use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
@@ -9,7 +10,6 @@ use yii\db\ActiveQueryInterface;
 use yii\db\BaseActiveRecord;
 use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
-use Yii;
 
 /**
  * Class ActiveRecord
@@ -60,16 +60,19 @@ class ActiveRecord extends BaseActiveRecord
         /* @var $record static */
         parent::populateRecord($record, $row);
         $relatedRecords = $record->relatedRecords();
-        foreach ($relatedRecords as $name) {
+        foreach ($relatedRecords as $relationName => $name) {
+            if (is_int($relationName)) {
+                $relationName = $name;
+            }
             if (isset($row[$name])) {
                 $value = $row[$name];
-                if ($record->canGetProperty($name)) {
-                    $getter = 'get' . $name;
+                if ($record->canGetProperty($relationName)) {
+                    $getter = 'get' . $relationName;
                     /** @var ActiveQuery $relation */
                     $relation = $record->$getter();
                     if ($relation instanceof ActiveQueryInterface) {
                         $models = $relation->modelClass::find()->populate($relation->multiple ? $value : [$value]);
-                        $record->populateRelation($name, $relation->multiple ? $models : reset($models));
+                        $record->populateRelation($relationName, $relation->multiple ? $models : reset($models));
                     }
                 }
             }
