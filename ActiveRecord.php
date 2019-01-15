@@ -64,26 +64,8 @@ class ActiveRecord extends BaseActiveRecord
      */
     public static function populateRecord($record, $row)
     {
-        // Override BaseActiveRecord::populateRecord to allow usage of key=>value attributes
         /* @var $record static */
-        $columns = array_flip($record->attributes());
-        foreach ($row as $name => $value) {
-//            if (isset($columns[$name]) && !is_int($columns[$name])) {
-//                $name = $columns[$name];
-//            }
-            if (isset($columns[$name])) {
-                if (!is_int($columns[$name])) {
-                    $name = $columns[$name];
-                }
-                $record->_attributes[$name] = $value;
-            } elseif ($record->canSetProperty($name)) {
-                $record->$name = $value;
-            }
-        }
-        $record->_oldAttributes = $record->_attributes;
-        $record->_related = [];
-        $record->_relationsDependencies = [];
-
+        parent::populateRecord($record, $row);
         $relatedRecords = $record->relatedRecords();
         foreach ($relatedRecords as $relationName => $name) {
             if (is_int($relationName)) {
