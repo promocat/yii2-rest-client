@@ -105,7 +105,7 @@ class ActiveQuery extends Query implements ActiveQueryInterface
 
     /**
      * Alias for innerJoin()
-     * @param $attribute
+     * @param array|string $attribute
      * @return $this
      */
     public function expand($attribute)
