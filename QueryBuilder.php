@@ -183,8 +183,10 @@ class QueryBuilder extends \yii\db\QueryBuilder
                 continue;
             }
             if (is_array($join)) {
-                $joinTable = explode(' ', $join[1]);
-                $expand[] = reset($joinTable);
+                foreach((array) $join[1] as $attribute) {
+                    $expandAttribute = explode(' ', $attribute);
+                    $expand[] = reset($expandAttribute);
+                }
                 continue;
             }
             $expand[] = $join;
