@@ -104,6 +104,17 @@ class ActiveQuery extends Query implements ActiveQueryInterface
     }
 
     /**
+     * Alias for innerJoin()
+     * @param $attribute
+     * @return $this
+     */
+    public function expand($attribute)
+    {
+        $this->join[] = [null, $attribute, ''];
+        return $this;
+    }
+
+    /**
      * Joins with the specified relations.
      *
      * This method allows you to reuse existing relation definitions to perform JOIN queries.
