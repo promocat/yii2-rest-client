@@ -18,7 +18,7 @@ class ActiveRecord extends BaseActiveRecord
 {
 
     /**
-     * @var array records that are related and where the data can be fetched by using join/joinWith
+     * @var array Array of related records.
      */
     private $_relatedRecords = [];
 
@@ -97,6 +97,16 @@ class ActiveRecord extends BaseActiveRecord
     }
 
     /**
+     * Returns an array of records that are related.
+     * Example:
+     * [
+     *    'actors',
+     *    'reviewers'
+     *    'screenCaptures' => 'screen_captures'
+     * ]
+     *
+     * When given a named index, the key will be used as relation name and the value will be just for the expand
+     * parameter (expand).
      * @return array
      */
     public function relatedRecords()
