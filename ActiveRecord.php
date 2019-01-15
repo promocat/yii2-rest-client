@@ -10,12 +10,20 @@ use yii\db\ActiveQueryInterface;
 use yii\db\BaseActiveRecord;
 use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
+use yii2tech\embedded\ContainerInterface;
+use yii2tech\embedded\ContainerTrait;
 
 /**
  * Class ActiveRecord
+ *
+ * ActiveRecord includes 'embedded' functionality from [\yii2tech\embedded\]
+ *
+ * @author Brandon Tilstra <brandontilstra@promocat.nl>
  */
 class ActiveRecord extends BaseActiveRecord
 {
+
+    use ContainerTrait;
 
     /**
      * @var array Array of related records.
@@ -77,6 +85,18 @@ class ActiveRecord extends BaseActiveRecord
                 }
             }
         }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+        $this->refreshFromEmbedded();
+        return true;
     }
 
     /**
