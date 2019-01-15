@@ -97,7 +97,10 @@ class ActiveRecord extends BaseActiveRecord
     }
 
     /**
-     * Returns an array of records that are related.
+     * Returns an array of records that are related. The value should match the attribute name in the model.
+     * When no key is supplied, the value will be used to find the relation. When a key is supplied, the key will be
+     * used for this purpose.
+     *
      * Example:
      * [
      *    'actors',
@@ -105,8 +108,6 @@ class ActiveRecord extends BaseActiveRecord
      *    'screenCaptures' => 'screen_captures'
      * ]
      *
-     * When given a named index, the key will be used as relation name and the value will be just for the expand
-     * parameter (expand).
      * @return array
      */
     public function relatedRecords()
