@@ -88,7 +88,11 @@ class QueryBuilder extends \yii\db\QueryBuilder
         foreach ($clauses['filter'] as &$qp) {
             if (is_array($qp)) {
                 foreach ($qp as &$value) {
-                    if (isset($params[$value])) {
+                    if (is_array($value)) {
+                        foreach ($value as &$_value) {
+                            $_value = $params[$_value];
+                        }
+                    } elseif (isset($params[$value])) {
                         $value = $params[$value];
                     }
                 }
@@ -183,7 +187,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
                 continue;
             }
             if (is_array($join)) {
-                foreach((array) $join[1] as $attribute) {
+                foreach ((array)$join[1] as $attribute) {
                     $expandAttribute = explode(' ', $attribute);
                     $expand[] = reset($expandAttribute);
                 }
