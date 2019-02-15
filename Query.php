@@ -210,7 +210,7 @@ class Query extends \yii\db\Query implements QueryInterface
         if ($this->emulateExecution) {
             return [];
         }
-        return iterator_to_array($this->each($batchSize, $db), true);
+        return iterator_to_array($this->each(), true);
     }
 
     public function each($batchSize = 50, $db = null)

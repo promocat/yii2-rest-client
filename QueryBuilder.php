@@ -277,11 +277,12 @@ class QueryBuilder extends \yii\db\QueryBuilder
     {
         $clauses = [];
         $perPage = null;
+        $maxPerPage = $this->db->maxPerPage;
 
         if ($this->hasPerPage($query->perPage)) {
-            $perPage = intval((string)($query->perPage > $this->db->maxPerPage ? $this->db->maxPerPage : $query->perPage));
+            $perPage = intval((string)($query->perPage > $maxPerPage ? $maxPerPage : $query->perPage));
         }
-        if ($perPage === null && $this->hasLimit($query->limit) && $query->limit < $this->db->maxPerPage) {
+        if ($this->hasLimit($query->limit) && $query->limit < $maxPerPage) {
             $perPage = $query->limit;
         }
 
