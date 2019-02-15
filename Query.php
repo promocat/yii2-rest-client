@@ -215,26 +215,15 @@ class Query extends \yii\db\Query implements QueryInterface
 
     public function each($batchSize = 50, $db = null)
     {
-        /*
-         * Gets the maxPerPage setting from the db config. Defaults to 50 when not set.
-         */
-        if ($db === null) {
-            $db = Yii::$app->get(Connection::getDriverName());
-        }
-
-        $maxPerPage = isset($db->maxPerPage) ? $db->maxPerPage : 50;
-        $batchSize = $batchSize > $maxPerPage ? $maxPerPage : $batchSize;
-
-        return Yii::createObject([
-            'class' => BatchQueryResult::class,
-            'query' => $this,
-            'batchSize' => $batchSize,
-            'db' => $db,
-            'each' => true,
-        ]);
+        return $this->batchQuery($batchSize, $db, true);
     }
 
     public function batch($batchSize = 50, $db = null)
+    {
+        return $this->batchQuery($batchSize, $db, false);
+    }
+
+    protected function batchQuery($batchSize, $db = null, $each = true)
     {
         /*
          * Gets the maxPerPage setting from the db config. Defaults to 50 when not set.
@@ -246,16 +235,17 @@ class Query extends \yii\db\Query implements QueryInterface
         $maxPerPage = isset($db->maxPerPage) ? $db->maxPerPage : 50;
         $batchSize = $batchSize > $maxPerPage ? $maxPerPage : $batchSize;
 
+        if ($this->perPage === null) {
+            $this->perPage($batchSize);
+        }
+
         return Yii::createObject([
             'class' => BatchQueryResult::class,
             'query' => $this,
             'batchSize' => $batchSize,
             'db' => $db,
-            'each' => false,
+            'each' => $each,
         ]);
     }
 
-    private function buildBatchSize() {
-
-    }
 }

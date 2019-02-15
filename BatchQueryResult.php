@@ -10,10 +10,12 @@ namespace promocat\rest;
 
 class BatchQueryResult extends \yii\db\BatchQueryResult
 {
-    protected $initalLimit;
-    protected $initalOffset;
+    protected $initialPerPage;
+    protected $initialLimit;
+    protected $initialOffset;
     protected $response;
     protected $lastPage = false;
+    protected $fetchedRows = 0;
 
     /**
      * @var array the data retrieved in the current batch
@@ -30,8 +32,9 @@ class BatchQueryResult extends \yii\db\BatchQueryResult
 
     public function init()
     {
-        $this->initalLimit = $this->query->limit;
-        $this->initalOffset = $this->query->offset;
+        $this->initialPerPage = $this->query->perPage;
+        $this->initialLimit = $this->query->limit;
+        $this->initialOffset = $this->query->offset;
     }
 
     /**
@@ -41,9 +44,11 @@ class BatchQueryResult extends \yii\db\BatchQueryResult
     {
         $this->response = null;
         $this->lastPage = false;
+        $this->fetchedRows = 0;
 
-        $this->query->limit($this->initalLimit);
-        $this->query->offset($this->initalOffset);
+        $this->query->perPage($this->initialPerPage);
+        $this->query->limit($this->initialLimit);
+        $this->query->offset($this->initialOffset);
 
         $this->_batch = null;
         $this->_value = null;
@@ -56,18 +61,32 @@ class BatchQueryResult extends \yii\db\BatchQueryResult
     public function next()
     {
         if ($this->_batch === null || !$this->each || $this->each && next($this->_batch) === false) {
-            if ($this->response !== null) { //a previous call was made, proceed to the next page
 
+            if ($this->response !== null) { //a previous call was made, proceed to the next page
                 $pageCount = (int)$this->response->headers->get('x-pagination-page-count');
                 $currentPage = (int)$this->response->headers->get('x-pagination-current-page');
                 $this->lastPage = $pageCount === $currentPage;
+
                 if ($currentPage < $pageCount) { // We have not reached the end
-                    $this->query->limit((int)$this->response->headers->get('x-pagination-per-page'));
-                    $this->query->offset($currentPage * $this->query->limit);
+                    $this->query->perPage((int)$this->response->headers->get('x-pagination-per-page'));
+                    $this->query->offset($currentPage * $this->query->perPage);
                 }
             }
+
+            if ($this->initialLimit !== null && $this->fetchedRows >= $this->initialLimit) {
+                $this->lastPage = true;
+            }
+
             $this->_batch = $this->fetchData();
-            reset($this->_batch);
+
+            if (!empty($this->_batch)) {
+                $this->fetchedRows += count($this->_batch);
+                if ($excessRows = $this->fetchedRows > $this->initialLimit) {
+                    $this->_batch = array_slice($this->_batch, 0, -($this->fetchedRows - $this->initialLimit));
+                    $this->fetchedRows = $this->initialLimit;
+                }
+                reset($this->_batch);
+            }
         }
         if ($this->each) {
             $this->_value = current($this->_batch);
@@ -127,6 +146,5 @@ class BatchQueryResult extends \yii\db\BatchQueryResult
     {
         return !empty($this->_batch);
     }
-
 
 }

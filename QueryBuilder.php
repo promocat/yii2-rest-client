@@ -83,7 +83,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
             'sort' => $this->buildOrderBy($query->orderBy)
         ];
 
-        $clauses = array_merge($clauses, $this->buildPagination($query->perPage, $query->offset, $query));
+        $clauses = array_merge($clauses, $this->buildPagination($query));
 
         foreach ($clauses['filter'] as &$qp) {
             if (is_array($qp)) {
@@ -270,21 +270,31 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
-     * @param integer $perPage
-     * @param integer $offset
-     *
+     * @param Query $query
      * @return array the PER-PAGE and PAGE clauses
      */
-    public function buildPagination($perPage, $offset)
+    public function buildPagination($query)
     {
         $clauses = [];
-        if ($this->hasPerPage($perPage)) {
-            $perPage = $perPage > $this->db->maxPerPage ? $this->db->maxPerPage : $perPage;
-            $clauses['per-page'] = (string)$perPage;
+        $perPage = null;
+
+        if ($this->hasPerPage($query->perPage)) {
+            $perPage = intval((string)($query->perPage > $this->db->maxPerPage ? $this->db->maxPerPage : $query->perPage));
         }
-        if ($this->hasOffset($offset)) {
-            $offset = intval((string)$offset);
+        if ($perPage === null && $this->hasLimit($query->limit) && $query->limit < $this->db->maxPerPage) {
+            $perPage = $query->limit;
+        }
+
+        if($perPage !== null) {
+            $clauses['per-page'] = $perPage;
+        } else {
+            $perPage = $this->db->defaultPerPage;
+        }
+
+        if ($this->hasOffset($query->offset)) {
+            $offset = intval((string)$query->offset);
             $clauses['page'] = ceil($offset / $perPage) + 1;
+            $clauses['per-page'] = $perPage; // When using offset, always use a per-page clause.
         }
 
         return $clauses;
