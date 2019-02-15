@@ -264,14 +264,17 @@ class Connection extends Component
     public function getHandler()
     {
         if (static::$_handler === null) {
+
             $requestConfig = array_merge([
                 'class' => 'yii\httpclient\Request',
                 'format' => Client::FORMAT_JSON
             ], $this->requestConfig);
+
             $responseConfig = array_merge([
                 'class' => 'yii\httpclient\Response',
                 'format' => Client::FORMAT_JSON
             ], $this->responseConfig);
+
             static::$_handler = new Client([
                 'baseUrl' => $this->baseUrl,
                 'requestConfig' => $requestConfig,

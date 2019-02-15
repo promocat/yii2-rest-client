@@ -22,6 +22,11 @@ class Query extends \yii\db\Query implements QueryInterface
     public $from;
 
     /**
+     * @var int limits the results returned per page. Not the same as $limit.
+     */
+    public $perPage;
+
+    /**
      * @var ActiveRecord
      */
     public $searchModel;
@@ -176,6 +181,17 @@ class Query extends \yii\db\Query implements QueryInterface
     }
 
     /**
+     * Sets the per-page part of the query.
+     * @param int
+     * @return $this the query object itself
+     */
+    public function perPage($perPage)
+    {
+        $this->perPage = $perPage;
+        return $this;
+    }
+
+    /**
      * @inheritdoc
      */
     public function one($db = null, $action = 'view')
@@ -194,24 +210,20 @@ class Query extends \yii\db\Query implements QueryInterface
         if ($this->emulateExecution) {
             return [];
         }
-        if ($this->limit !== null) {
-            return parent::all($db);
-        }
-
-        /*
-         * Gets the maxPerPage setting from the db config. Defaults to 50 when not set.
-         */
-        if($db === null) {
-            $db = Yii::$app->get(Connection::getDriverName());
-        }
-        $batchSize = isset($db->maxPerPage) ? $db->maxPerPage : 50;
-
         return iterator_to_array($this->each($batchSize, $db), true);
     }
 
     public function each($batchSize = 50, $db = null)
     {
-        $this->limit($batchSize);
+        /*
+         * Gets the maxPerPage setting from the db config. Defaults to 50 when not set.
+         */
+        if ($db === null) {
+            $db = Yii::$app->get(Connection::getDriverName());
+        }
+
+        $maxPerPage = isset($db->maxPerPage) ? $db->maxPerPage : 50;
+        $batchSize = $batchSize > $maxPerPage ? $maxPerPage : $batchSize;
 
         return Yii::createObject([
             'class' => BatchQueryResult::class,
@@ -224,7 +236,15 @@ class Query extends \yii\db\Query implements QueryInterface
 
     public function batch($batchSize = 50, $db = null)
     {
-        $this->limit($batchSize);
+        /*
+         * Gets the maxPerPage setting from the db config. Defaults to 50 when not set.
+         */
+        if ($db === null) {
+            $db = Yii::$app->get(Connection::getDriverName());
+        }
+
+        $maxPerPage = isset($db->maxPerPage) ? $db->maxPerPage : 50;
+        $batchSize = $batchSize > $maxPerPage ? $maxPerPage : $batchSize;
 
         return Yii::createObject([
             'class' => BatchQueryResult::class,
@@ -233,5 +253,9 @@ class Query extends \yii\db\Query implements QueryInterface
             'db' => $db,
             'each' => false,
         ]);
+    }
+
+    private function buildBatchSize() {
+
     }
 }
