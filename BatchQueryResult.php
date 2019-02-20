@@ -78,11 +78,10 @@ class BatchQueryResult extends \yii\db\BatchQueryResult
             }
 
             $this->_batch = $this->fetchData();
-
             if (!empty($this->_batch)) {
                 $this->fetchedRows += count($this->_batch);
-                if ($excessRows = $this->fetchedRows > $this->initialLimit) {
-                    $this->_batch = array_slice($this->_batch, 0, -($this->fetchedRows - $this->initialLimit));
+                if (!empty($this->initialLimit) && ($excessRows = $this->fetchedRows - $this->initialLimit) > 0) {
+                    $this->_batch = array_slice($this->_batch, 0, -$excessRows);
                     $this->fetchedRows = $this->initialLimit;
                 }
                 reset($this->_batch);
