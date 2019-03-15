@@ -58,10 +58,11 @@ class RestDataProvider extends ActiveDataProvider
      */
     protected function prepareTotalCount()
     {
-        if (!$this->query instanceof QueryInterface) {
-            throw new InvalidConfigException('The "query" property must be an instance of a class that implements the QueryInterface e.g. yii\db\Query or its subclasses.');
-        }
-
-        return (int)$this->query->count();
+        return -1; // Return -1 to prevent getPagination from firing a HEAD request before prepareModels() is called.
+//        if (!$this->query instanceof QueryInterface) {
+//            throw new InvalidConfigException('The "query" property must be an instance of a class that implements the QueryInterface e.g. yii\db\Query or its subclasses.');
+//        }
+//
+//        return (int)$this->query->count();
     }
 }
