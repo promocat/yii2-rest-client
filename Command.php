@@ -164,9 +164,6 @@ class Command extends Component
      */
     protected function queryInternal($method = 'get')
     {
-        if (strpos($this->uri, '/') === false) {
-            $this->uri = Inflector::pluralize($this->uri);
-        }
         if (!empty($this->queryParams)) {
             $this->uri .= ('?' . http_build_query($this->queryParams));
             $this->queryParams = [];
