@@ -60,6 +60,27 @@ class ActiveRecord extends BaseActiveRecord
 
     /**
      * @inheritdoc
+     * Defaults to ['id'].
+     */
+    public static function primaryKey()
+    {
+        return ['id'];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function setAttribute($name, $value)
+    {
+        try {
+            parent::setAttribute($name, $value);
+        } catch (InvalidArgumentException $e) {
+            // do nothing
+        }
+    }
+
+    /**
+     * @inheritdoc
      * @throws InvalidConfigException
      */
     public static function populateRecord($record, $row)
@@ -87,35 +108,6 @@ class ActiveRecord extends BaseActiveRecord
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function beforeSave($insert)
-    {
-        if (!parent::beforeSave($insert)) {
-            return false;
-        }
-        $this->refreshFromEmbedded();
-        return true;
-    }
-
-    /**
-     * @inheritdoc
-     * Defaults to ['id'].
-     */
-    public static function primaryKey()
-    {
-        return ['id'];
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public static function instantiate($row)
-    {
-        return new static($row);
-    }
-
-    /**
      * Returns an array of records that are related. The value should match the attribute name in the model.
      * When no key is supplied, the value will be used to find the relation. When a key is supplied, the key will be
      * used for this purpose.
@@ -137,13 +129,9 @@ class ActiveRecord extends BaseActiveRecord
     /**
      * @inheritdoc
      */
-    public function setAttribute($name, $value)
+    public static function instantiate($row)
     {
-        try {
-            parent::setAttribute($name, $value);
-        } catch (InvalidArgumentException $e) {
-            // do nothing
-        }
+        return new static($row);
     }
 
     /**
@@ -177,7 +165,6 @@ class ActiveRecord extends BaseActiveRecord
         /* @var $connection Connection */
         return $connection;
     }
-
 
     /**
      * Declares the name of the url path associated with this AR class.
@@ -233,6 +220,18 @@ class ActiveRecord extends BaseActiveRecord
         $this->setOldAttributes($values);
         $this->afterSave(true, $changedAttributes);
 
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+        $this->refreshFromEmbedded();
         return true;
     }
 

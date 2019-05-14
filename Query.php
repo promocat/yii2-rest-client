@@ -46,6 +46,27 @@ class Query extends \yii\db\Query implements QueryInterface
     }
 
     /**
+     * Returns the number of records.
+     *
+     * @param string $q the COUNT expression. Defaults to '*'.
+     * @param Connection $db the database connection used to execute the query.
+     * If this parameter is not given, the `db` application component will be used.
+     *
+     * @return int number of records.
+     */
+    public function count($q = '*', $db = null)
+    {
+        if ($this->emulateExecution) {
+            return 0;
+        }
+        $result = $this->createCommand($db, 'count')->execute('head');
+
+        /* @var $result \yii\web\HeaderCollection */
+
+        return $result->get('x-pagination-total-count');
+    }
+
+    /**
      * Creates a DB command that can be used to execute this query.
      *
      * @param Connection $db the connection used to generate the statement.
@@ -69,25 +90,13 @@ class Query extends \yii\db\Query implements QueryInterface
         return $db->createCommand($commandConfig);
     }
 
-    /**
-     * Returns the number of records.
-     *
-     * @param string $q the COUNT expression. Defaults to '*'.
-     * @param Connection $db the database connection used to execute the query.
-     * If this parameter is not given, the `db` application component will be used.
-     *
-     * @return int number of records.
-     */
-    public function count($q = '*', $db = null)
+    public function addAction($action)
     {
-        if ($this->emulateExecution) {
-            return 0;
+        if (empty($this->action)) {
+            $this->action = $action;
         }
-        $result = $this->createCommand($db, 'count')->execute('head');
 
-        /* @var $result \yii\web\HeaderCollection */
-
-        return $result->get('x-pagination-total-count');
+        return $this;
     }
 
     /**
@@ -122,15 +131,6 @@ class Query extends \yii\db\Query implements QueryInterface
     public function action($action)
     {
         $this->action = $action;
-
-        return $this;
-    }
-
-    public function addAction($action)
-    {
-        if (empty($this->action)) {
-            $this->action = $action;
-        }
 
         return $this;
     }
@@ -181,28 +181,6 @@ class Query extends \yii\db\Query implements QueryInterface
     }
 
     /**
-     * Sets the per-page part of the query.
-     * @param int
-     * @return $this the query object itself
-     */
-    public function perPage($perPage)
-    {
-        $this->perPage = $perPage;
-        return $this;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function one($db = null, $action = 'view')
-    {
-        if ($this->emulateExecution) {
-            return false;
-        }
-        return $this->createCommand($db, $action)->queryOne();
-    }
-
-    /**
      * @inheritdoc
      */
     public function all($db = null)
@@ -216,11 +194,6 @@ class Query extends \yii\db\Query implements QueryInterface
     public function each($batchSize = 50, $db = null)
     {
         return $this->batchQuery($batchSize, $db, true);
-    }
-
-    public function batch($batchSize = 50, $db = null)
-    {
-        return $this->batchQuery($batchSize, $db, false);
     }
 
     protected function batchQuery($batchSize, $db = null, $each = true)
@@ -246,6 +219,33 @@ class Query extends \yii\db\Query implements QueryInterface
             'db' => $db,
             'each' => $each,
         ]);
+    }
+
+    /**
+     * Sets the per-page part of the query.
+     * @param int
+     * @return $this the query object itself
+     */
+    public function perPage($perPage)
+    {
+        $this->perPage = $perPage;
+        return $this;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function one($db = null, $action = 'view')
+    {
+        if ($this->emulateExecution) {
+            return false;
+        }
+        return $this->createCommand($db, $action)->queryOne();
+    }
+
+    public function batch($batchSize = 50, $db = null)
+    {
+        return $this->batchQuery($batchSize, $db, false);
     }
 
 }

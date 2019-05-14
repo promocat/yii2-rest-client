@@ -3,8 +3,8 @@
 namespace promocat\rest;
 
 use yii\base\InvalidConfigException;
-use yii\db\QueryInterface;
 use yii\data\ActiveDataProvider;
+use yii\db\QueryInterface;
 
 /**
  * Class RestDataProvider

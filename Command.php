@@ -3,8 +3,8 @@
 namespace promocat\rest;
 
 use yii\base\Component;
-use yii\helpers\Inflector;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Inflector;
 
 /**
  * Class Command class implements the API for accessing REST API.
@@ -63,6 +63,22 @@ class Command extends Component
     public function queryAll()
     {
         return $this->queryInternal();
+    }
+
+    /**
+     * Performs the actual get statment
+     *
+     * @param string $method
+     *
+     * @return mixed
+     */
+    protected function queryInternal($method = 'get')
+    {
+        if (!empty($this->queryParams)) {
+            $this->uri .= ('?' . http_build_query($this->queryParams));
+            $this->queryParams = [];
+        }
+        return $this->db->$method($this->uri, $this->queryParams, $this->headers);
     }
 
     /**
@@ -153,21 +169,5 @@ class Command extends Component
             $this->uri .= '/' . $id;
         }
         return $this->db->delete($this->uri, [], $this->headers);
-    }
-
-    /**
-     * Performs the actual get statment
-     *
-     * @param string $method
-     *
-     * @return mixed
-     */
-    protected function queryInternal($method = 'get')
-    {
-        if (!empty($this->queryParams)) {
-            $this->uri .= ('?' . http_build_query($this->queryParams));
-            $this->queryParams = [];
-        }
-        return $this->db->$method($this->uri, $this->queryParams, $this->headers);
     }
 }

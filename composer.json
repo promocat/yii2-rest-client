@@ -1,43 +1,43 @@
 {
-	"name": "promocat/yii2-rest-client",
-	"type": "yii2-extension",
-	"description": "REST client (AR-like model) for Yii Framework 2.0 (via yii2-http-client, extends ApexWire/yii2-restclient)",
-	"keywords": [
-		"yii2",
-		"rest",
-		"client",
-		"model",
-		"active record"
-	],
-	"license": "MIT",
-	"authors": [
-		{
-			"name": "ApexWire",
-			"email": "apexwire@gmail.com"
-		},
-		{
-			"name": "simialbi",
-			"email": "simi.albi@gmail.com"
-		},
-		{
-			"name": "PromoCat",
-			"email": "development@promocat.nl"
-		}
-	],
-	"support": {
-		"source": "https://github.com/promocat/yii2-rest-client",
-		"issues": "https://github.com/promocat/yii2-rest-client/issues"
-	},
-	"minimum-stability": "beta",
-	"require": {
-		"php": ">=7.1.0",
-		"yiisoft/yii2": ">=2.0.5",
-		"yiisoft/yii2-httpclient": ">=2.0.0",
-		"yii2tech/embedded": "*"
-	},
-	"autoload": {
-		"psr-4": {
-			"promocat\\rest\\": ""
-		}
-	}
+  "name": "promocat/yii2-rest-client",
+  "type": "yii2-extension",
+  "description": "REST client (AR-like model) for Yii Framework 2.0 (via yii2-http-client, extends ApexWire/yii2-restclient)",
+  "keywords": [
+    "yii2",
+    "rest",
+    "client",
+    "model",
+    "active record"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "ApexWire",
+      "email": "apexwire@gmail.com"
+    },
+    {
+      "name": "simialbi",
+      "email": "simi.albi@gmail.com"
+    },
+    {
+      "name": "PromoCat",
+      "email": "development@promocat.nl"
+    }
+  ],
+  "support": {
+    "source": "https://github.com/promocat/yii2-rest-client",
+    "issues": "https://github.com/promocat/yii2-rest-client/issues"
+  },
+  "minimum-stability": "beta",
+  "require": {
+    "php": ">=7.1.0",
+    "yiisoft/yii2": ">=2.0.5",
+    "yiisoft/yii2-httpclient": ">=2.0.0",
+    "yii2tech/embedded": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "promocat\\rest\\": ""
+    }
+  }
 }

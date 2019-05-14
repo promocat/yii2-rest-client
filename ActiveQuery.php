@@ -91,6 +91,97 @@ class ActiveQuery extends Query implements ActiveQueryInterface
     }
 
     /**
+     * {@inheritdoc}
+     * @throws InvalidConfigException
+     */
+    public function populate($rows)
+    {
+        if (empty($rows)) {
+            return [];
+        }
+
+        $models = $this->createModels($rows);
+        if (!empty($this->join) && $this->indexBy === null) {
+            $models = $this->removeDuplicatedModels($models);
+        }
+        if (!empty($this->with)) {
+            $this->findWith($this->with, $models);
+        }
+        if (!$this->asArray) {
+            foreach ($models as $model) {
+                $model->afterFind();
+            }
+        } elseif ($this->indexBy !== null) {
+            $result = [];
+            foreach ($models as $model) {
+                $index = ArrayHelper::getValue($model, $this->indexBy);
+                if ($this->unsetIndexBy) {
+                    unset($model[$this->indexBy]);
+                }
+                $result[$index] = $model;
+            }
+            $models = $result;
+        }
+        return $models;
+    }
+
+    /**
+     * Removes duplicated models by checking their primary key values.
+     * This method is mainly called when a join query is performed, which may cause duplicated rows being returned.
+     *
+     * @param array $models the models to be checked
+     *
+     * @return array the distinctive models
+     * @throws InvalidConfigException if model primary key is empty
+     */
+    private function removeDuplicatedModels($models)
+    {
+        $hash = [];
+        /* @var $class ActiveRecord */
+        $class = $this->modelClass;
+        $pks = $class::primaryKey();
+
+        if (count($pks) > 1) {
+            // composite primary key
+            foreach ($models as $i => $model) {
+                $key = [];
+                foreach ($pks as $pk) {
+                    if (!isset($model[$pk])) {
+                        // do not continue if the primary key is not part of the result set
+                        break 2;
+                    }
+                    $key[] = $model[$pk];
+                }
+                $key = serialize($key);
+                if (isset($hash[$key])) {
+                    unset($models[$i]);
+                } else {
+                    $hash[$key] = true;
+                }
+            }
+        } elseif (empty($pks)) {
+            throw new InvalidConfigException("Primary key of '{$class}' can not be empty.");
+        } else {
+            // single column primary key
+            $pk = reset($pks);
+            foreach ($models as $i => $model) {
+                if (!isset($model[$pk])) {
+                    // do not continue if the primary key is not part of the result set
+                    break;
+                }
+                $key = $model[$pk];
+                if (isset($hash[$key])) {
+                    unset($models[$i]);
+                } elseif ($key !== null) {
+                    $hash[$key] = true;
+                }
+            }
+        }
+
+        return array_values($models);
+    }
+
+    /**
      * @inheritdoc
      */
     public function prepare($builder)
@@ -99,58 +190,6 @@ class ActiveQuery extends Query implements ActiveQueryInterface
             $this->buildJoinWith();
             $this->joinWith = null;
         }
-
-        return $this;
-    }
-
-    /**
-     * Alias for innerJoin()
-     * @param array|string $attribute
-     * @return $this
-     */
-    public function expand($attribute)
-    {
-        $this->join[] = [null, $attribute, ''];
-        return $this;
-    }
-
-    /**
-     * Joins with the specified relations.
-     *
-     * This method allows you to reuse existing relation definitions to perform JOIN queries.
-     * Based on the definition of the specified relation(s), the method will append one or multiple
-     * JOIN statements to the current query.
-     *
-     * @param string|array $with the relations to be joined. This can either be a string, representing a relation name or
-     * an array with the following semantics:
-     *
-     * - Each array element represents a single relation.
-     * - You may specify the relation name as the array key and provide an anonymous functions that
-     *   can be used to modify the relation queries on-the-fly as the array value.
-     * - If a relation query does not need modification, you may use the relation name as the array value.
-     *
-     * Sub-relations can also be specified, see [[with()]] for the syntax.
-     *
-     * In the following you find some examples:
-     *
-     * ```php
-     * // find all orders that contain books, and eager loading "books"
-     * Order::find()->joinWith('books')->all();
-     * // find all orders, eager loading "books", and sort the orders and books by the book names.
-     * Order::find()->joinWith([
-     *     'books' => function (\simialbi\yii2\rest\ActiveQuery $query) {
-     *         $query->orderBy('item.name');
-     *     }
-     * ])->all();
-     * // find all orders that contain books of the category 'Science fiction', using the alias "b" for the books table
-     * Order::find()->joinWith(['books b'])->where(['b.category' => 'Science fiction'])->all();
-     * ```
-     *
-     * @return $this the query object itself
-     */
-    public function joinWith($with)
-    {
-        $this->joinWith[] = (array)$with;
 
         return $this;
     }
@@ -228,93 +267,54 @@ class ActiveQuery extends Query implements ActiveQueryInterface
     }
 
     /**
-     * {@inheritdoc}
-     * @throws InvalidConfigException
+     * Alias for innerJoin()
+     * @param array|string $attribute
+     * @return $this
      */
-    public function populate($rows)
+    public function expand($attribute)
     {
-        if (empty($rows)) {
-            return [];
-        }
-
-        $models = $this->createModels($rows);
-        if (!empty($this->join) && $this->indexBy === null) {
-            $models = $this->removeDuplicatedModels($models);
-        }
-        if (!empty($this->with)) {
-            $this->findWith($this->with, $models);
-        }
-        if (!$this->asArray) {
-            foreach ($models as $model) {
-                $model->afterFind();
-            }
-        } elseif ($this->indexBy !== null) {
-            $result = [];
-            foreach ($models as $model) {
-                $index = ArrayHelper::getValue($model, $this->indexBy);
-                if ($this->unsetIndexBy) {
-                    unset($model[$this->indexBy]);
-                }
-                $result[$index] = $model;
-            }
-            $models = $result;
-        }
-        return $models;
+        $this->join[] = [null, $attribute, ''];
+        return $this;
     }
 
     /**
-     * Removes duplicated models by checking their primary key values.
-     * This method is mainly called when a join query is performed, which may cause duplicated rows being returned.
+     * Joins with the specified relations.
      *
-     * @param array $models the models to be checked
+     * This method allows you to reuse existing relation definitions to perform JOIN queries.
+     * Based on the definition of the specified relation(s), the method will append one or multiple
+     * JOIN statements to the current query.
      *
-     * @throws InvalidConfigException if model primary key is empty
-     * @return array the distinctive models
+     * @param string|array $with the relations to be joined. This can either be a string, representing a relation name or
+     * an array with the following semantics:
+     *
+     * - Each array element represents a single relation.
+     * - You may specify the relation name as the array key and provide an anonymous functions that
+     *   can be used to modify the relation queries on-the-fly as the array value.
+     * - If a relation query does not need modification, you may use the relation name as the array value.
+     *
+     * Sub-relations can also be specified, see [[with()]] for the syntax.
+     *
+     * In the following you find some examples:
+     *
+     * ```php
+     * // find all orders that contain books, and eager loading "books"
+     * Order::find()->joinWith('books')->all();
+     * // find all orders, eager loading "books", and sort the orders and books by the book names.
+     * Order::find()->joinWith([
+     *     'books' => function (\simialbi\yii2\rest\ActiveQuery $query) {
+     *         $query->orderBy('item.name');
+     *     }
+     * ])->all();
+     * // find all orders that contain books of the category 'Science fiction', using the alias "b" for the books table
+     * Order::find()->joinWith(['books b'])->where(['b.category' => 'Science fiction'])->all();
+     * ```
+     *
+     * @return $this the query object itself
      */
-    private function removeDuplicatedModels($models)
+    public function joinWith($with)
     {
-        $hash = [];
-        /* @var $class ActiveRecord */
-        $class = $this->modelClass;
-        $pks = $class::primaryKey();
+        $this->joinWith[] = (array)$with;
 
-        if (count($pks) > 1) {
-            // composite primary key
-            foreach ($models as $i => $model) {
-                $key = [];
-                foreach ($pks as $pk) {
-                    if (!isset($model[$pk])) {
-                        // do not continue if the primary key is not part of the result set
-                        break 2;
-                    }
-                    $key[] = $model[$pk];
-                }
-                $key = serialize($key);
-                if (isset($hash[$key])) {
-                    unset($models[$i]);
-                } else {
-                    $hash[$key] = true;
-                }
-            }
-        } elseif (empty($pks)) {
-            throw new InvalidConfigException("Primary key of '{$class}' can not be empty.");
-        } else {
-            // single column primary key
-            $pk = reset($pks);
-            foreach ($models as $i => $model) {
-                if (!isset($model[$pk])) {
-                    // do not continue if the primary key is not part of the result set
-                    break;
-                }
-                $key = $model[$pk];
-                if (isset($hash[$key])) {
-                    unset($models[$i]);
-                } elseif ($key !== null) {
-                    $hash[$key] = true;
-                }
-            }
-        }
-
-        return array_values($models);
+        return $this;
     }
 }
