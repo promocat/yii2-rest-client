@@ -45,6 +45,7 @@ class ActiveQuery extends Query implements ActiveQueryInterface
      * @param Connection $db the DB connection used to create the DB command.
      *                       If null, the DB connection returned by [[modelClass]] will be used.
      *
+     * @param string $action
      * @return Command the created DB command instance.
      */
     public function createCommand($db = null, $action = 'get')

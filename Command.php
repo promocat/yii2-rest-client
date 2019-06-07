@@ -58,9 +58,10 @@ class Command extends Component
     }
 
     /**
+     * @param int $fetchMode for compatibility with [[\yii\db\Command]]
      * @return mixed
      */
-    public function queryAll()
+    public function queryAll($fetchMode = null)
     {
         return $this->queryInternal();
     }
@@ -82,9 +83,10 @@ class Command extends Component
     }
 
     /**
+     * @param int $fetchMode for compatibility with [[\yii\db\Command]]
      * @return mixed
      */
-    public function queryOne()
+    public function queryOne($fetchMode = null)
     {
         /* @var $class ActiveRecord */
         $class = $this->modelClass;

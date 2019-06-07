@@ -107,7 +107,9 @@ class QueryBuilder extends \yii\db\QueryBuilder
             'modelClass' => ArrayHelper::getValue($query, 'modelClass', ''),
             'uri' => $uri,
             'headers' => $headers,
-            'queryParams' => array_filter($clauses),
+            'queryParams' => array_filter($clauses, function ($value) {
+                return empty($value) && (int)$value !== 0;
+            }),
             'action' => $query->action
         ];
     }
