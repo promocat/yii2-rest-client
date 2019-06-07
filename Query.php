@@ -27,11 +27,6 @@ class Query extends \yii\db\Query implements QueryInterface
     public $perPage;
 
     /**
-     * @var ActiveRecord
-     */
-    public $searchModel;
-
-    /**
      * Prepares for building query.
      * This method is called by [[QueryBuilder]] when it starts to build SQL from a query object.
      * You may override this method to do some final preparation work when converting a query into a SQL statement.

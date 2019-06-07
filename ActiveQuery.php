@@ -26,6 +26,8 @@ class ActiveQuery extends Query implements ActiveQueryInterface
      */
     public $unsetIndexBy = false;
 
+    public $modelClass;
+
     /**
      * Constructor.
      *
@@ -45,7 +47,6 @@ class ActiveQuery extends Query implements ActiveQueryInterface
      * @param Connection $db the DB connection used to create the DB command.
      *                       If null, the DB connection returned by [[modelClass]] will be used.
      *
-     * @param string $action
      * @return Command the created DB command instance.
      */
     public function createCommand($db = null, $action = 'get')
@@ -62,10 +63,6 @@ class ActiveQuery extends Query implements ActiveQueryInterface
         if ($this->from === null) {
             $this->from($modelClass::modelName());
         }
-
-//		if ($this->searchModel === null) {
-//			$this->searchModel = mb_substr(mb_strrchr($this->modelClass, '\\'), 1).'Search';
-//		}
 
         return parent::createCommand($db, $action);
     }
