@@ -108,7 +108,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
             'uri' => $uri,
             'headers' => $headers,
             'queryParams' => array_filter($clauses, function ($value) {
-                return empty($value) && (int)$value !== 0;
+                return !empty($value) || (int)$value === 0;
             }),
             'action' => $query->action
         ];
