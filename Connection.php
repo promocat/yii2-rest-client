@@ -214,7 +214,8 @@ class Connection extends Component
     {
         $method = strtoupper($method);
 
-        $profile = $method . ' ' . $url . '#' . (is_array($data) ? http_build_query($data) : $data);
+//        $profile = $method . ' ' . $url . '#' . (is_array($data) ? http_build_query($data) : $data);
+        $profile = $method . ' ' . $url;
 
         Yii::beginProfile($profile, __METHOD__);
         $this->_response = call_user_func([$this->handler, $method], $url, $data, $headers)->send();

@@ -4,7 +4,6 @@ namespace promocat\rest\conditions;
 
 
 use promocat\rest\Query;
-use yii\db\conditions\InCondition;
 use yii\db\ExpressionInterface;
 use yii\helpers\ArrayHelper;
 
@@ -29,19 +28,20 @@ class HashConditionBuilder extends \yii\db\conditions\HashConditionBuilder
         foreach ($hash as $column => $value) {
             if (ArrayHelper::isTraversable($value) || $value instanceof Query) {
                 // IN condition
-                $parts[] = $this->queryBuilder->buildCondition(new InCondition($column, 'IN', $value), $params);
+//                $parts[] = $this->queryBuilder->buildCondition(new InCondition($column, 'IN', $value), $params);
+                $parts[$column] = ['in' => $value];
             } else {
                 if ($value === null) {
-                    $parts[] = [$column => null];
+                    $parts[$column] = [$column => null];
                 } elseif ($value instanceof ExpressionInterface) {
-                    $parts[] = [$column => $this->queryBuilder->buildExpression($value, $params)];
+                    $parts[$column] = [$column => $this->queryBuilder->buildExpression($value, $params)];
                 } else {
                     $phName = $this->queryBuilder->bindParam($value, $params);
-                    $parts[] = [$column => $phName];
+                    $parts[$column] = $phName;
                 }
             }
         }
-
-        return count($parts) === 1 ? $parts[0] : $parts;
+        return $parts;
+//        return count($parts) === 1 ? reset($parts) : $parts;
     }
 }

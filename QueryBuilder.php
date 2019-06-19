@@ -11,6 +11,7 @@ use promocat\rest\conditions\NotConditionBuilder;
 use promocat\rest\conditions\SimpleConditionBuilder;
 use yii\base\NotSupportedException;
 use yii\db\Expression;
+use yii\db\ExpressionInterface;
 use yii\helpers\ArrayHelper;
 
 /**
@@ -43,6 +44,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
      */
     protected $conditionBuilders = [
         'AND' => 'buildAndCondition',
+        'IN' => 'buildInCondition'
     ];
 
     /**
@@ -84,28 +86,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
         ];
 
         $clauses = array_merge($clauses, $this->buildPagination($query));
-
-        $clauses['filter'] = array_filter($clauses['filter'], function ($value) {
-            return !empty($value) || (int)$value === 0;
-        });
-
-        foreach ($clauses['filter'] as &$qp) {
-            if (is_array($qp)) {
-                foreach ($qp as &$value) {
-                    if (is_array($value)) {
-                        foreach ($value as &$_value) {
-                            $_value = $params[$_value];
-                        }
-                    } elseif (isset($params[$value])) {
-                        $value = $params[$value];
-                    }
-                }
-            } else {
-                if (isset($params[$qp])) {
-                    $qp = $params[$qp];
-                }
-            }
-        }
 
         return [
             'modelClass' => ArrayHelper::getValue($query, 'modelClass', ''),
@@ -211,7 +191,13 @@ class QueryBuilder extends \yii\db\QueryBuilder
     public function buildWhere($condition, &$params)
     {
         $where = $this->buildCondition($condition, $params);
-        return $where;
+
+        /*
+         * Remove "empty" values, but do allow for zero-values
+         */
+        return array_filter($where, function ($value) {
+            return !empty($value) || (int)$value === 0;
+        });
     }
 
     /**
@@ -224,8 +210,10 @@ class QueryBuilder extends \yii\db\QueryBuilder
         if ($condition instanceof Expression || empty($condition) || !is_array($condition)) {
             return [];
         }
+
+        /* @var $condition ExpressionInterface */
         $condition = $this->createConditionFromArray($condition);
-        /* @var $condition \yii\db\conditions\SimpleCondition */
+
         return $this->buildExpression($condition, $params);
     }
 
@@ -293,6 +281,14 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function bindParam($value, &$params)
+    {
+        return $value;
+    }
+
+    /**
      * @inheritdoc
      */
     public function buildHashCondition($condition, &$params)
@@ -325,10 +321,8 @@ class QueryBuilder extends \yii\db\QueryBuilder
             'yii\db\conditions\BetweenCondition' => BetweenConditionBuilder::class,
             'yii\db\conditions\InCondition' => InConditionBuilder::class,
             'yii\db\conditions\LikeCondition' => LikeConditionBuilder::class,
-//            'yii\db\conditions\ExistsCondition' => 'yii\db\conditions\ExistsConditionBuilder',
             'yii\db\conditions\SimpleCondition' => SimpleConditionBuilder::class,
             'yii\db\conditions\HashCondition' => HashConditionBuilder::class,
-//            'yii\db\conditions\BetweenColumnsCondition' => 'yii\db\conditions\BetweenColumnsConditionBuilder'
         ];
     }
 }
