@@ -219,7 +219,8 @@ class Connection extends Component
         $this->_response = call_user_func([$this->handler, $method], $url, $data, $headers)->send();
         Yii::endProfile($profile, __METHOD__);
 
-        Yii::getLogger()->log($profile . ' STATUS ' . $this->_response->getStatusCode(), Logger::LEVEL_PROFILE, __METHOD__);
+        Yii::getLogger()->log($profile . ' STATUS ' . $this->_response->getStatusCode(), Logger::LEVEL_PROFILE,
+            __METHOD__);
 
         if (!$this->_response->isOk) {
             return false;

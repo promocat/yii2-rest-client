@@ -73,16 +73,7 @@ class RestPanel extends DbPanel implements ViewContextInterface
      */
     public function getDetail()
     {
-        $status = [];
-        foreach ($this->data['messages'] as $message) {
-            if ($message[1] !== Logger::LEVEL_PROFILE) {
-                continue;
-            }
-            preg_match('/^([a-zA-Z]+\s.+)\sSTATUS\s(\d+)$/', $message[0], $matches);
-            if (!empty($matches)) {
-                $status[$matches[1]] = $matches[2];
-            }
-        }
+
         $searchModel = new Rest();
 
         if (!$searchModel->load(Yii::$app->request->getQueryParams())) {
@@ -98,9 +89,23 @@ class RestPanel extends DbPanel implements ViewContextInterface
             'panel' => $this,
             'dataProvider' => $dataProvider,
             'searchModel' => $searchModel,
-            'hasExplain' => $this->hasExplain(),
             'sumDuplicates' => $sumDuplicates,
-            'status' => $status
+            'status' => $this->getRequestStatus()
         ], $this);
+    }
+
+    protected function getRequestStatus()
+    {
+        $status = [];
+        foreach ($this->data['messages'] as $message) {
+            if ($message[1] !== Logger::LEVEL_PROFILE) {
+                continue;
+            }
+            preg_match('/^([a-zA-Z]+\s.+)\sSTATUS\s(\d+)$/', $message[0], $matches);
+            if (!empty($matches)) {
+                $status[$matches[1]] = $matches[2];
+            }
+        }
+        return $status;
     }
 }
