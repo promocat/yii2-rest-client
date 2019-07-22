@@ -8,7 +8,7 @@ use yii\web\View;
 /* @var RestPanel $panel */
 /* @var yii\debug\models\search\Db $searchModel */
 /* @var yii\data\ArrayDataProvider $dataProvider */
-/* @var bool $hasExplain */
+/* @var int[] $status */
 /* @var int $sumDuplicates */
 
 echo Html::tag('h1', $panel->getName() . ' Queries');
@@ -70,7 +70,7 @@ echo GridView::widget([
         ],
         [
             'attribute' => 'query',
-            'value' => function ($data) use ($hasExplain, $panel) {
+            'value' => function ($data) use ($panel) {
                 $query = Html::tag('div', Html::encode($data['query']));
 
                 if (!empty($data['trace'])) {
