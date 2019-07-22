@@ -6,8 +6,8 @@ use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\httpclient\Client;
-use yii\httpclient\Exception;
 use yii\httpclient\Response;
+use yii\log\Logger;
 use yii\web\HeaderCollection;
 
 /**
@@ -213,13 +213,13 @@ class Connection extends Component
     protected function request($method, $url, $data = [], $headers = [])
     {
         $method = strtoupper($method);
-
 //        $profile = $method . ' ' . $url . '#' . (is_array($data) ? http_build_query($data) : $data);
         $profile = $method . ' ' . $url;
-
         Yii::beginProfile($profile, __METHOD__);
         $this->_response = call_user_func([$this->handler, $method], $url, $data, $headers)->send();
         Yii::endProfile($profile, __METHOD__);
+
+        Yii::getLogger()->log($profile . ' STATUS ' . $this->_response->getStatusCode(), Logger::LEVEL_PROFILE, __METHOD__);
 
         if (!$this->_response->isOk) {
             return false;
