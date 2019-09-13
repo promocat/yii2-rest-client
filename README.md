@@ -30,8 +30,14 @@ To use this extension, configure restclient component in your application config
 ```php
     'components' => [
         'rest' => [
-            'class'   => 'simialbi\yii2\rest\Connection',
-            'baseUrl' => 'https://api.site.com/'
+            'class'                         => 'simialbi\yii2\rest\Connection',
+            'baseUrl'                       => 'https://api.site.com/',
+            'allowRetries'                  => false,
+            'maxWaitTimeBetweenRetries'     => 10000,
+            'maxRetries'                    => 1,
+            'baseRetryInterval'             => 250,
+            'intervalMultiplier'            => 2,
+            'requestConfig'                 => ['options' => ['timeout' => 10]]
         ],
     ],
 ```

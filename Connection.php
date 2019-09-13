@@ -2,11 +2,21 @@
 
 namespace promocat\rest;
 
+use Exception;
+use promocat\rest\exceptions\BadRequestRestException;
+use promocat\rest\exceptions\ForbiddenRestException;
+use promocat\rest\exceptions\NotAcceptableRestException;
+use promocat\rest\exceptions\NotAllowedRestException;
+use promocat\rest\exceptions\RestException;
+use promocat\rest\exceptions\ServerErrorRestException;
+use promocat\rest\exceptions\ServiceUnavailableRestException;
+use promocat\rest\exceptions\TooManyRequestsRestException;
+use promocat\rest\exceptions\UnauthorizedRestException;
+use promocat\rest\components\RestResponse;
 use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\httpclient\Client;
-use yii\httpclient\Response;
 use yii\log\Logger;
 use yii\web\HeaderCollection;
 
@@ -68,6 +78,31 @@ class Connection extends Component
      * @var int The maximum results requested per page when recursing
      */
     public $maxPerPage = 50;
+
+    /**
+     * @var bool Can retry requests when encountering certain response codes
+     */
+    public $allowRetries = false;
+
+    /**
+     * @var int The maximum ammount of retries that can be made for a single request
+     */
+    public $maxRetries = 1;
+
+    /**
+     * @var int The maximum total wait time between reties for the same request in milliseconds
+     */
+    public $maxWaitTimeBetweenRetries = 10000;
+
+    /**
+     * @var int Increase each interval between request retries by this amount in milliseconds
+     */
+    public $baseRetryInterval = 250;
+
+    /**
+     * @var int Interval multiplier increase between each retry.
+     */
+    public $increaseIntervalMultiplier = 2;
 
     /**
      * @var string|\Closure authorization config
@@ -190,8 +225,9 @@ class Connection extends Component
      * @param string $url URL
      * @param array $data request body
      *
+     * @param array $headers
      * @return mixed response
-     * @throws \yii\base\InvalidConfigException
+     * @throws Exception
      */
     public function get($url, $data = [], $headers = [])
     {
@@ -209,24 +245,59 @@ class Connection extends Component
      * @param array $headers
      *
      * @return Response|false
+     * @throws Exception
      */
     protected function request($method, $url, $data = [], $headers = [])
     {
         $method = strtoupper($method);
-//        $profile = $method . ' ' . $url . '#' . (is_array($data) ? http_build_query($data) : $data);
         $profile = $method . ' ' . $url;
         Yii::beginProfile($profile, __METHOD__);
-        $this->_response = call_user_func([$this->handler, $method], $url, $data, $headers)->send();
+        $retry = false;
+        $retries = 0;
+        $retryWaitTime = 0;
+        do {
+            try {
+                $this->_response = $this->_request($method, $url, $data, $headers);
+            } catch (Exception $e) {
+                if ($this->retryAllowed($e, $retries, $retryWaitTime)) {
+                    $retries++;
+                    $retry = true;
+                    $interval = $this->calculateRetryInterval($e, $retries);
+                    $retryWaitTime = $retryWaitTime + $interval;
+                    usleep($interval * 1000);
+                } else {
+                    throw $e;
+                }
+            }
+        } while ($retry === true);
         Yii::endProfile($profile, __METHOD__);
-
         Yii::getLogger()->log($profile . ' STATUS ' . $this->_response->getStatusCode(), Logger::LEVEL_PROFILE,
             __METHOD__);
-
-        if (!$this->_response->isOk) {
-            return false;
-        }
-
         return $this->_response->data;
+    }
+
+    private function _request($method, $url, $data = [], $headers = [])
+    {
+        $response = call_user_func([$this->handler, $method], $url, $data, $headers)->send();
+        /* @var RestResponse $response */
+        if ($response->isOk) {
+            return $response;
+        }
+        return false;
+    }
+
+    private function retryAllowed(RestException $e, int $retries, int $retryWaitTime)
+    {
+        $typeOfExceptionCanRetry = $e->canRetry();
+        $newRetryWaitTime = $retryWaitTime + $this->calculateRetryInterval($e, $retries);
+        return $typeOfExceptionCanRetry && $this->allowRetries && $retries < $this->maxRetries && $newRetryWaitTime < $this->maxWaitTimeBetweenRetries;
+    }
+
+    private function calculateRetryInterval(RestException $e, int $retries): int
+    {
+        $retryAfter = $e->getRetryAfter(false, true);
+        $interval = $this->baseRetryInterval * ($this->increaseIntervalMultiplier ** ($retries -1));
+        return $retryAfter !== null && $retryAfter > $interval ? $retryAfter : $interval;
     }
 
     /**
@@ -235,8 +306,9 @@ class Connection extends Component
      * @param string $url URL
      * @param array $data request body
      *
+     * @param array $headers
      * @return HeaderCollection response
-     * @throws \yii\base\InvalidConfigException
+     * @throws Exception
      */
     public function head($url, $data = [], $headers = [])
     {
@@ -250,8 +322,9 @@ class Connection extends Component
      * @param string $url URL
      * @param array $data request body
      *
+     * @param array $headers
      * @return mixed response
-     * @throws \yii\base\InvalidConfigException
+     * @throws Exception
      */
     public function post($url, $data = [], $headers = [])
     {
@@ -264,8 +337,9 @@ class Connection extends Component
      * @param string $url URL
      * @param array $data request body
      *
+     * @param array $headers
      * @return mixed response
-     * @throws \yii\base\InvalidConfigException
+     * @throws Exception
      */
     public function put($url, $data = [], $headers = [])
     {
@@ -278,8 +352,9 @@ class Connection extends Component
      * @param string $url URL
      * @param array $data request body
      *
+     * @param array $headers
      * @return mixed response
-     * @throws \yii\base\InvalidConfigException
+     * @throws Exception
      */
     public function delete($url, $data = [], $headers = [])
     {
@@ -298,7 +373,7 @@ class Connection extends Component
 
             $requestConfig = array_merge([
                 'class' => 'yii\httpclient\Request',
-                'format' => Client::FORMAT_JSON
+                'format' => Client::FORMAT_JSON,
             ], $this->requestConfig);
 
             $responseConfig = array_merge([
@@ -315,5 +390,4 @@ class Connection extends Component
 
         return static::$_handler;
     }
-
 }
