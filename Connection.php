@@ -271,8 +271,10 @@ class Connection extends Component
             }
         } while ($retry === true);
         Yii::endProfile($profile, __METHOD__);
-        Yii::getLogger()->log($profile . ' STATUS ' . $this->_response->getStatusCode(), Logger::LEVEL_PROFILE,
-            __METHOD__);
+        if($this->_response !== false) {
+            Yii::getLogger()->log($profile . ' STATUS ' . $this->_response->getStatusCode(), Logger::LEVEL_PROFILE,
+                __METHOD__);
+        }
         return $this->_response->data;
     }
 
@@ -377,7 +379,7 @@ class Connection extends Component
             ], $this->requestConfig);
 
             $responseConfig = array_merge([
-                'class' => 'yii\httpclient\Response',
+                'class' => 'promocat\rest\components\RestResponse',
                 'format' => Client::FORMAT_JSON
             ], $this->responseConfig);
 
