@@ -105,6 +105,11 @@ class Connection extends Component
     public $increaseIntervalMultiplier = 2;
 
     /**
+     * @var array Response headers for pagination
+     */
+    public $paginationHeaders;
+
+    /**
      * @var string|\Closure authorization config
      */
     protected $_auth = [];
