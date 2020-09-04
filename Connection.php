@@ -105,9 +105,24 @@ class Connection extends Component
     public $increaseIntervalMultiplier = 2;
 
     /**
-     * @var array Response headers for pagination
+     * @var string Header for items per page
      */
-    public $paginationHeaders;
+    public $perPageHeader = 'x-pagination-per-page';
+
+    /**
+     * @var string Header for current page
+     */
+    public $currentPageHeader = 'x-pagination-current-page';
+
+    /**
+     * @var string Header for total count
+     */
+    public $totalCountHeader = 'x-pagination-total-count';
+
+    /**
+     * @var string Header for page count
+     */
+    public $pageCountHeader = 'x-pagination-page-count';
 
     /**
      * @var string|\Closure authorization config

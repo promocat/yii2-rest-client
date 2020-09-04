@@ -57,8 +57,7 @@ class Query extends \yii\db\Query implements QueryInterface
         $result = $this->createCommand($db, 'count')->execute('head');
 
         /* @var $result \yii\web\HeaderCollection */
-
-        return $result->get($db->paginationHeaders['totalCount'] ?? 'x-pagination-total-count');
+        return $result->get($db->totalCountHeader);
     }
 
     /**
@@ -106,7 +105,7 @@ class Query extends \yii\db\Query implements QueryInterface
         $result = $this->createCommand($db, 'exists')->execute('head');
 
         /* @var $result \yii\web\HeaderCollection */
-        return ($result->get($db->paginationHeaders['totalCount'] ?? 'x-pagination-total-count', 0) > 0);
+        return ($result->get($db->totalCountHeader, 0) > 0);
     }
 
     /**

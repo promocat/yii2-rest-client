@@ -63,12 +63,12 @@ class BatchQueryResult extends \yii\db\BatchQueryResult
         if ($this->_batch === null || !$this->each || $this->each && next($this->_batch) === false) {
 
             if ($this->response !== null) { //a previous call was made, proceed to the next page
-                $pageCount = (int)$this->response->headers->get($this->query->paginationHeaders['pageCount'] ?? 'x-pagination-page-count');
-                $currentPage = (int)$this->response->headers->get($this->query->paginationHeaders['currentPage'] ?? 'x-pagination-current-page');
+                $pageCount = (int)$this->response->headers->get($this->query->pageCountHeader);
+                $currentPage = (int)$this->response->headers->get($this->query->currentPageHeader);
                 $this->lastPage = $pageCount === $currentPage;
 
                 if ($currentPage < $pageCount) { // We have not reached the end
-                    $this->query->perPage((int)$this->response->headers->get($this->query->paginationHeaders['perPage'] ?? 'x-pagination-per-page'));
+                    $this->query->perPage((int)$this->response->headers->get($this->query->perPageHeader));
                     $this->query->offset($currentPage * $this->query->perPage);
                 }
             }

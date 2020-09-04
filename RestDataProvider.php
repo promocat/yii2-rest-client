@@ -38,10 +38,10 @@ class RestDataProvider extends ActiveDataProvider
         $rows = $command->queryAll();
         if ($pagination !== false) {
             if (($response = $command->db->getResponse()) !== null) { //Get the response object from previous query.
-                $pagination->totalCount = (int)$response->headers->get($command->db->paginationHeaders['totalCount'] ?? 'x-pagination-total-count');
-                $pagination->setPage((int)$response->headers->get($command->db->paginationHeaders['currentPage'] ?? 'x-pagination-current-page') - 1,
+                $pagination->totalCount = (int)$response->headers->get($command->db->totalCountHeader);
+                $pagination->setPage((int)$response->headers->get($command->db->currentPageHeader) - 1,
                     $pagination->getPage());
-                $pagination->setPageSize((int)$response->headers->get($command->db->paginationHeaders['perPage'] ?? 'x-pagination-per-page'),
+                $pagination->setPageSize((int)$response->headers->get($command->db->perPageHeader),
                     $pagination->getPageSize());
                 $this->setTotalCount($pagination->totalCount);
             }
