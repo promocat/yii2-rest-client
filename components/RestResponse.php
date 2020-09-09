@@ -5,6 +5,7 @@ namespace promocat\rest\components;
 
 
 use promocat\rest\exceptions\BadRequestRestException;
+use promocat\rest\exceptions\DataValidationRestException;
 use promocat\rest\exceptions\ForbiddenRestException;
 use promocat\rest\exceptions\NotAcceptableRestException;
 use promocat\rest\exceptions\NotAllowedRestException;
@@ -32,6 +33,9 @@ class RestResponse extends Response
                 break;
             case '429':
                 throw new TooManyRequestsRestException($this, 'Too many requests', $code);
+                break;
+            case '422':
+                throw new DataValidationRestException($this, 'Data validation failed', $code);
                 break;
             case '406':
                 throw new NotAcceptableRestException($this, 'Not acceptable', $code);
