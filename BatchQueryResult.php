@@ -68,7 +68,7 @@ class BatchQueryResult extends \yii\db\BatchQueryResult
                 $this->lastPage = $pageCount === $currentPage;
 
                 if ($currentPage < $pageCount) { // We have not reached the end
-                    $this->query->perPage((int)$this->response->headers->get($this->db->perPageHeaeder));
+                    $this->query->perPage((int)$this->response->headers->get($this->db->perPageHeader));
                     $this->query->offset($currentPage * $this->query->perPage);
                 }
             }
