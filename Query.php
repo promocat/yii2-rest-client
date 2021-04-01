@@ -49,15 +49,17 @@ class Query extends \yii\db\Query implements QueryInterface
      *
      * @return int number of records.
      */
-    public function count($q = '*', $db = null)
+    public function count($q = '*', $db = null): int
     {
         if ($this->emulateExecution) {
             return 0;
         }
-        $result = $this->createCommand($db, 'count')->execute('head');
+        $command = $this->createCommand($db, 'count');
+
+        $result = $command->execute('head');
 
         /* @var $result \yii\web\HeaderCollection */
-        return $result->get($db->totalCountHeader);
+        return $result->get($command->db->totalCountHeader);
     }
 
     /**
@@ -102,10 +104,7 @@ class Query extends \yii\db\Query implements QueryInterface
             return false;
         }
 
-        $result = $this->createCommand($db, 'exists')->execute('head');
-
-        /* @var $result \yii\web\HeaderCollection */
-        return ($result->get($db->totalCountHeader, 0) > 0);
+        return $this->count('*', $db) > 0;
     }
 
     /**
