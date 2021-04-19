@@ -33,8 +33,7 @@
     "php": ">=7.1.0",
     "yiisoft/yii2": ">=2.0.5",
     "yiisoft/yii2-httpclient": ">=2.0.0",
-    "yii2tech/embedded": "*",
-    "yidas/yii2-bower-asset": "*"
+    "yii2tech/embedded": "*"
   },
   "autoload": {
     "psr-4": {
